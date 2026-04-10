@@ -164,7 +164,10 @@ export default function StudentDirectoryClientPage({
             </Button>
           </form>
 
-          <div className="flex items-center justify-end">
+          <div className="flex items-center justify-end gap-2">
+            <Link href={`/${locale}/admin/students/import`}>
+              <Button type="button" variant="outline">Bulk Import CSV</Button>
+            </Link>
             <Button onClick={() => setIsFormOpen(true)} disabled={isGlobal} className="gap-2">
               <Plus className="size-4" /> Add Student
             </Button>
