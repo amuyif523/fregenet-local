@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import crypto from "node:crypto";
-import { revalidatePath } from "next/cache";
+import { revalidateTag } from "next/cache";
 import { getAdminSessionUser } from "@/lib/admin-auth";
 import { reconcilePendingDonations } from "@/lib/reconcile";
 import { getIpFromHeaders } from "@/lib/logger";
 import { ROLE_DIRECTOR, ROLE_FINANCE, ROLE_SUPERADMIN, assertRoleAllowed } from "@/lib/rbac";
+import { TRANSPARENCY_IMPACT_TAG } from "@/lib/cache-tags";
 
 function safeEqual(a: string, b: string) {
   const aBuffer = Buffer.from(a);
@@ -46,8 +47,7 @@ export async function POST(request: Request) {
     actorIp: requestIp
   });
 
-  revalidatePath("/en/transparency", "page");
-  revalidatePath("/am/transparency", "page");
+  revalidateTag(TRANSPARENCY_IMPACT_TAG);
 
   return NextResponse.json({
     ok: true,

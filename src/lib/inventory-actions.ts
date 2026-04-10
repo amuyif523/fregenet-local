@@ -1,10 +1,11 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { verifySession } from "@/lib/auth-guard";
 import { ROLE_DIRECTOR, ROLE_STAFF, ROLE_SUPERADMIN, assertRoleAllowed } from "@/lib/rbac";
+import { TRANSPARENCY_IMPACT_TAG } from "@/lib/cache-tags";
 
 function parsePositiveInt(value: number) {
   const parsed = Number(value);
@@ -92,8 +93,7 @@ export async function restockItem(itemId: string, amount: number, notes?: string
   revalidatePath("/[locale]/admin/inventory", "page");
   revalidatePath("/[locale]/admin/finance", "page");
   revalidatePath("/[locale]/admin/activity", "page");
-  revalidatePath("/en/transparency", "page");
-  revalidatePath("/am/transparency", "page");
+  revalidateTag(TRANSPARENCY_IMPACT_TAG);
   return { success: true };
 }
 

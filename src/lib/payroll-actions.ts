@@ -1,9 +1,10 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { verifySession } from "@/lib/auth-guard";
 import { ROLE_DIRECTOR, ROLE_FINANCE, ROLE_SUPERADMIN, assertRoleAllowed } from "@/lib/rbac";
+import { TRANSPARENCY_IMPACT_TAG } from "@/lib/cache-tags";
 
 // Workaround for `Decimal` type which is sometimes difficult to unwrap natively from standard imports in Next.js builds
 import Decimal from "decimal.js";
@@ -165,8 +166,7 @@ export async function processCenterPayroll(centerId: string, month: number, year
   revalidatePath("/[locale]/admin/staff", "page");
   revalidatePath("/[locale]/admin/finance", "page");
   revalidatePath("/[locale]/admin/activity", "page");
-  revalidatePath("/en/transparency", "page");
-  revalidatePath("/am/transparency", "page");
+  revalidateTag(TRANSPARENCY_IMPACT_TAG);
   
   return { 
     success: true, 

@@ -1,10 +1,11 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import Decimal from "decimal.js";
 import { verifySession } from "@/lib/auth-guard";
 import { ROLE_DIRECTOR, ROLE_FINANCE, ROLE_SUPERADMIN, assertRoleAllowed, normalizeRole } from "@/lib/rbac";
+import { TRANSPARENCY_IMPACT_TAG } from "@/lib/cache-tags";
 
 const EXPENSE_CATEGORIES = ["FOOD_PROGRAM", "UTILITIES", "MAINTENANCE", "CONSTRUCTION", "SUPPLIES"] as const;
 type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number];
@@ -101,8 +102,7 @@ export async function upsertSchoolExpense(formData: FormData) {
 
   revalidatePath("/[locale]/admin/finance", "page");
   revalidatePath("/[locale]/admin/activity", "page");
-  revalidatePath("/en/transparency", "page");
-  revalidatePath("/am/transparency", "page");
+  revalidateTag(TRANSPARENCY_IMPACT_TAG);
   return { success: true };
 }
 
@@ -127,8 +127,7 @@ export async function deleteSchoolExpense(expenseId: string) {
   });
   revalidatePath("/[locale]/admin/finance", "page");
   revalidatePath("/[locale]/admin/activity", "page");
-  revalidatePath("/en/transparency", "page");
-  revalidatePath("/am/transparency", "page");
+  revalidateTag(TRANSPARENCY_IMPACT_TAG);
 }
 
 export async function unsealFinanceMonth(input: { centerId: string; month: number; year: number; reason: string }) {
@@ -186,8 +185,7 @@ export async function unsealFinanceMonth(input: { centerId: string; month: numbe
 
   revalidatePath("/[locale]/admin/finance", "page");
   revalidatePath("/[locale]/admin/activity", "page");
-  revalidatePath("/en/transparency", "page");
-  revalidatePath("/am/transparency", "page");
+  revalidateTag(TRANSPARENCY_IMPACT_TAG);
 
   return { success: true };
 }
