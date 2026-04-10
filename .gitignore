@@ -26,6 +26,7 @@ prisma/generated/
 
 # uploads and runtime files
 uploads/
+backups/
 *.sqlite
 *.db
 

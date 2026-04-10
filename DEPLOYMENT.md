@@ -121,6 +121,25 @@ sudo docker compose -f docker-compose.prod.yml --env-file .env.production up -d
 sudo docker compose -f docker-compose.prod.yml --env-file .env.production run --rm fregenet-app npx prisma migrate deploy
 ```
 
+### Schema change workflow (required)
+
+Create migrations locally and commit them:
+
+```bash
+npx prisma migrate dev --name your_change_name
+```
+
+Then deploy using `npx prisma migrate deploy` in production.
+Avoid using `prisma db push` for tracked schema changes.
+
+### On-demand DB backup
+
+```bash
+bash scripts/backup-db.sh
+```
+
+Backups are written to the `backups/` directory.
+
 ### View logs
 
 ```bash

@@ -25,12 +25,20 @@ docker compose up -d
 cp .env.example .env
 ```
 
-3. Sync schema:
+3. Run migrations and generate client:
 
 ```bash
+npx prisma migrate dev --name init_erp
 npx prisma generate
-npx prisma db push
 ```
+
+For every future schema change, create a new migration with a descriptive name:
+
+```bash
+npx prisma migrate dev --name your_change_name
+```
+
+Do not use `prisma db push` for normal development history, because it skips migration tracking.
 
 4. Run app:
 
@@ -40,12 +48,6 @@ npm run dev
 
 ## Production Secrets and Hash Generation
 
-Generate admin password hash:
-
-```bash
-npm run generate:admin-password-hash -- "your-strong-admin-password"
-```
-
 Generate high-entropy session/token secrets:
 
 ```bash
@@ -54,10 +56,17 @@ npm run generate:session-secret
 
 Use generated values in `.env.production`:
 
-- `ADMIN_PASSWORD_HASH`
 - `ADMIN_SESSION_SECRET`
 - `DONATION_STATUS_TOKEN_SECRET`
 - `CRON_SECRET`
+
+## Database Backup Utility
+
+Create a timestamped SQL dump to `backups/`:
+
+```bash
+bash scripts/backup-db.sh
+```
 
 ## Manual Reconciliation Sync
 
