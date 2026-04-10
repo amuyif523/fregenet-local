@@ -207,6 +207,32 @@ export default async function AdminPage({
           </div>
         )}
       </div>
+
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 className="text-lg font-black text-[#006D77]">Help & Resources</h2>
+        <p className="mt-2 text-sm text-slate-600">Quick-start links for onboarding and daily operations.</p>
+
+        <div className="mt-4 grid gap-3 md:grid-cols-3">
+          <a
+            href="/docs/student_import_template.csv"
+            className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+          >
+            Download CSV Import Template
+          </a>
+          <a
+            href="/docs/directors_guide.pdf"
+            className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+          >
+            Open Director's Guide
+          </a>
+          <Link
+            href={`/${locale}/admin/health`}
+            className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+          >
+            Open System Health Page
+          </Link>
+        </div>
+      </div>
     </section>
   );
 }

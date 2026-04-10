@@ -1,0 +1,2 @@
+student_name,grade_level,gender,date_of_birth,enrollment_date,status,guardian_name,guardian_phone,guardian_relationship,guardian_email,guardian_address
+Example Student,Grade 5,MALE,2014-04-15,2025-09-01,ACTIVE,Example Guardian,0911223344,LEGAL_GUARDIAN,guardian@example.com,Addis Ababa
