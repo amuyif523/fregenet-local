@@ -1,17 +1,17 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Plus, Play, UserCheck, UserX, Image as ImageIcon, Briefcase, DollarSign } from "lucide-react";
+import { Plus, Play, UserCheck, UserX, Image as ImageIcon, Briefcase } from "lucide-react";
 import { upsertStaff, deactivateStaff } from "@/lib/staff-actions";
 import { processCenterPayroll } from "@/lib/payroll-actions";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { normalizeRole } from "@/lib/rbac";
 
 type StaffMember = {
   id: string;
   name: string;
   role: "TEACHER" | "ADMIN" | "SUPPORT";
-  baseSalary: any; // Prisma Decimal converted loosely on client
+  baseSalary: number | string;
   pensionNumber: string | null;
   photoUrl: string | null;
   isActive: boolean;
@@ -22,21 +22,30 @@ function formatCurrency(value: number) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "ETB" }).format(value);
 }
 
+function getErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+  return fallback;
+}
+
 export default function StaffClientPage({
   initialStaff,
   isGlobal,
-  centerId
+  centerId,
+  userRole
 }: {
   initialStaff: StaffMember[];
   isGlobal: boolean;
   centerId: string;
+  userRole: string;
 }) {
-  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingStaff, setEditingStaff] = useState<StaffMember | null>(null);
 
   const [message, setMessage] = useState<{ text: string; error?: boolean } | null>(null);
+  const canManageStaff = !isGlobal && normalizeRole(userRole) !== "FINANCE";
 
   const handleRunPayroll = async () => {
     if (!window.confirm("Are you sure you want to run payroll for all active staff in this center?")) return;
@@ -52,8 +61,8 @@ export default function StaffClientPage({
         } else {
           setMessage({ text: res.message, error: true });
         }
-      } catch (err: any) {
-        setMessage({ text: err.message, error: true });
+      } catch (error: unknown) {
+        setMessage({ text: getErrorMessage(error, "Payroll run failed."), error: true });
       }
     });
   };
@@ -79,8 +88,8 @@ export default function StaffClientPage({
         await upsertStaff(formData);
         setIsFormOpen(false);
         setEditingStaff(null);
-      } catch (err: any) {
-        alert(err.message);
+      } catch (error: unknown) {
+        alert(getErrorMessage(error, "Unable to save staff profile."));
       }
     });
   };
@@ -104,12 +113,14 @@ export default function StaffClientPage({
         <div className="flex gap-2">
           {!isGlobal && (
             <>
-              <button
-                onClick={() => { setEditingStaff(null); setIsFormOpen(true); }}
-                className="flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-700"
-              >
-                <Plus className="size-4" /> Add Staff
-              </button>
+              {canManageStaff && (
+                <button
+                  onClick={() => { setEditingStaff(null); setIsFormOpen(true); }}
+                  className="flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-700"
+                >
+                  <Plus className="size-4" /> Add Staff
+                </button>
+              )}
               <button
                 onClick={handleRunPayroll}
                 disabled={isPending || activeCount === 0}
@@ -185,13 +196,13 @@ export default function StaffClientPage({
                   </td>
                   <td className="p-4 text-right">
                     <button
-                      disabled={isPending || isGlobal || !staff.isActive}
+                      disabled={isPending || isGlobal || !canManageStaff || !staff.isActive}
                       onClick={() => { setEditingStaff(staff); setIsFormOpen(true); }}
                       className="text-sm font-semibold text-[#006D77] hover:underline disabled:opacity-50 disabled:no-underline"
                     >
                       Edit
                     </button>
-                    {staff.isActive && (
+                    {staff.isActive && canManageStaff && (
                       <button
                         onClick={() => handleDeactivate(staff.id)}
                         disabled={isPending || isGlobal}
@@ -209,7 +220,7 @@ export default function StaffClientPage({
       </div>
 
       {/* FORM MODAL */}
-      {isFormOpen && (
+      {isFormOpen && canManageStaff && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm">
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
             <h2 className="text-xl font-bold text-slate-900 mb-4">{editingStaff ? "Edit Staff Member" : "Add New Staff"}</h2>

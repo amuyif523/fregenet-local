@@ -9,7 +9,7 @@ ZIP_PATH="$PROJECT_ROOT/yegara-deploy.zip"
 
 cd "$PROJECT_ROOT"
 
-echo "[1/7] Pre-flight checks"
+echo "[1/10] Pre-flight checks"
 if ! command -v npm >/dev/null 2>&1; then
   echo "Error: npm is required but was not found in PATH."
   exit 1
@@ -51,13 +51,28 @@ else
   fi
 fi
 
-echo "[2/7] Running production build"
+echo "[2/10] Verifying required runtime dependencies"
+for dep in decimal.js date-fns bcryptjs; do
+  if ! npm ls "$dep" >/dev/null 2>&1; then
+    echo "Error: required dependency '$dep' is missing."
+    echo "Install with: npm install $dep"
+    exit 1
+  fi
+done
+
+echo "[3/10] Generating Prisma client"
+if ! npx prisma generate; then
+  echo "Error: Prisma client generation failed."
+  exit 1
+fi
+
+echo "[4/10] Running production build"
 if ! npm run build; then
   echo "Error: Build failed. Aborting package creation."
   exit 1
 fi
 
-echo "[3/7] Reconstructing standalone package directory"
+echo "[5/10] Reconstructing standalone package directory"
 if [[ ! -d "$PROJECT_ROOT/.next/standalone" ]]; then
   echo "Error: .next/standalone was not generated."
   echo "Verify Next.js standalone output and try again."
@@ -93,28 +108,28 @@ else
   mkdir -p "$DIST_DIR/public"
 fi
 
-echo "[4/7] Copying Prisma schema/runtime files"
+echo "[6/10] Copying Prisma schema/runtime files"
 if [[ ! -d "$PROJECT_ROOT/prisma" ]]; then
   echo "Error: prisma directory is missing."
   exit 1
 fi
 cp -a "$PROJECT_ROOT/prisma" "$DIST_DIR/prisma"
 
-echo "[5/7] Verifying entry point"
+echo "[7/10] Verifying entry point"
 if [[ ! -f "$DIST_DIR/server.js" ]]; then
   echo "Error: server.js is missing in yegara_dist root."
   echo "The cPanel Node.js app needs this startup file."
   exit 1
 fi
 
-echo "[6/7] Creating deployment zip"
+echo "[8/10] Creating deployment zip"
 rm -f "$ZIP_PATH"
 (
   cd "$DIST_DIR"
   zip -r ../yegara-deploy.zip . -i "*" >/dev/null
 )
 
-echo "[7/7] Verifying deployment zip contents"
+echo "[9/10] Verifying deployment zip contents"
 ZIP_LISTING="$(unzip -l "$ZIP_PATH")"
 
 echo "$ZIP_LISTING" | grep -Eq '(^|[[:space:]])server\.js$' || {
@@ -129,7 +144,7 @@ echo "$ZIP_LISTING" | grep -Eq '[[:space:]]\.next/$|[[:space:]]\.next/' || {
 
 echo "Verified: yegara-deploy.zip contains server.js and .next/"
 
-echo "[8/8] Cleaning temporary directory"
+echo "[10/10] Cleaning temporary directory"
 rm -rf "$DIST_DIR"
 
 echo ""

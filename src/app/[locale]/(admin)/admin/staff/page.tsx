@@ -1,15 +1,15 @@
-import { getTranslations } from "next-intl/server";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import StaffClientPage from "./StaffClientPage";
+import { getAdminSessionUser } from "@/lib/admin-auth";
 
 export default async function StaffPage({
   params
 }: {
   params: Promise<{ locale: string }>;
 }) {
-  const { locale } = await params;
-  const t = await getTranslations();
+  await params;
+  const sessionUser = await getAdminSessionUser();
 
   const cookieStore = await cookies();
   const rawCenterId = cookieStore.get("fregenet_center_id")?.value || "GLOBAL";
@@ -36,9 +36,13 @@ export default async function StaffPage({
 
         <div className="mt-8">
           <StaffClientPage 
-            initialStaff={staffMembers} 
+            initialStaff={staffMembers.map((staff) => ({
+              ...staff,
+              baseSalary: Number(staff.baseSalary)
+            }))}
             isGlobal={isGlobal} 
-            centerId={rawCenterId} 
+            centerId={rawCenterId}
+            userRole={sessionUser?.role || "STAFF"}
           />
         </div>
       </div>

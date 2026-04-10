@@ -1,5 +1,6 @@
 import "dotenv/config";
 import { PrismaClient } from "./generated/client";
+import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
@@ -242,14 +243,66 @@ async function seedNewsletters() {
   }
 }
 
+async function ensureBootstrapSuperadmin() {
+  const existingAccounts = await prisma.staffAccount.count();
+  if (existingAccounts > 0) {
+    console.log("Bootstrap admin skipped: StaffAccount records already exist.");
+    return;
+  }
+
+  const initialAdminPassword = process.env.INITIAL_ADMIN_PASSWORD?.trim();
+  if (!initialAdminPassword) {
+    console.log("Bootstrap admin skipped: INITIAL_ADMIN_PASSWORD not set.");
+    return;
+  }
+
+  const email = (process.env.INITIAL_ADMIN_EMAIL || "superadmin@fregenet.local").trim().toLowerCase();
+
+  const center =
+    (await prisma.schoolCenter.findFirst({
+      where: { isActive: true },
+      orderBy: { createdAt: "asc" }
+    })) ??
+    (await prisma.schoolCenter.create({
+      data: {
+        name: "Default Center",
+        location: "Addis Ababa"
+      }
+    }));
+
+  const staff = await prisma.staff.create({
+    data: {
+      name: "Platform Superadmin",
+      role: "ADMIN",
+      baseSalary: 0,
+      centerId: center.id,
+      isActive: true
+    }
+  });
+
+  const passwordHash = await bcrypt.hash(initialAdminPassword, 12);
+
+  await prisma.staffAccount.create({
+    data: {
+      email,
+      password: passwordHash,
+      role: "SUPERADMIN",
+      staffId: staff.id
+    }
+  });
+
+  console.log(`Bootstrap SUPERADMIN account created for ${email}. Rotate INITIAL_ADMIN_PASSWORD immediately.`);
+}
+
 async function main() {
   console.log("Seed start: DATABASE_URL loaded =", Boolean(process.env.DATABASE_URL));
 
   await seedDonations();
   await seedProjects();
   await seedNewsletters();
+  await ensureBootstrapSuperadmin();
 
-  console.log("Seed complete: donations, projects, and newsletters inserted.");
+  console.log("Seed complete: donations, projects, newsletters, and bootstrap admin check complete.");
 }
 
 main()
