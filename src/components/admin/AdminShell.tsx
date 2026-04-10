@@ -5,7 +5,19 @@ import { useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 
-export default function AdminShell({ locale, children }: { locale: string; children: ReactNode }) {
+export default function AdminShell({ 
+  locale, 
+  activeCenter,
+  centers,
+  userRole,
+  children 
+}: { 
+  locale: string; 
+  activeCenter: string;
+  centers: Array<{id: string; name: string}>;
+  userRole: string;
+  children: ReactNode;
+}) {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
   const isLoginRoute = pathname?.endsWith("/login") ?? false;
@@ -28,7 +40,7 @@ export default function AdminShell({ locale, children }: { locale: string; child
       </div>
 
       <div className="hidden lg:block">
-        <AdminSidebar locale={locale} />
+        <AdminSidebar locale={locale} activeCenter={activeCenter} centers={centers} userRole={userRole} />
       </div>
 
       {isOpen ? (
@@ -42,7 +54,7 @@ export default function AdminShell({ locale, children }: { locale: string; child
             >
               <X className="size-4" />
             </button>
-            <AdminSidebar locale={locale} onNavigate={() => setIsOpen(false)} mobile />
+            <AdminSidebar locale={locale} activeCenter={activeCenter} centers={centers} userRole={userRole} onNavigate={() => setIsOpen(false)} mobile />
           </div>
         </div>
       ) : null}
