@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 export default function AdminLoginPage() {
   const router = useRouter();
   const params = useParams<{ locale: string }>();
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -19,7 +20,7 @@ export default function AdminLoginPage() {
       const response = await fetch("/api/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password })
+        body: JSON.stringify({ email, password })
       });
 
       const contentType = response.headers.get("content-type") ?? "";
@@ -44,9 +45,22 @@ export default function AdminLoginPage() {
     <section className="mx-auto flex min-h-[70vh] max-w-md items-center px-4 py-16 sm:px-6 lg:px-8">
       <div className="w-full rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
         <h1 className="text-2xl font-black text-[#006D77]">FKL Admin Login</h1>
-        <p className="mt-2 text-sm text-slate-600">Enter your admin password to continue.</p>
+        <p className="mt-2 text-sm text-slate-600">Sign in with your staff account credentials.</p>
 
         <form className="mt-6 space-y-4" onSubmit={onSubmit}>
+          <div>
+            <label htmlFor="email" className="mb-2 block text-sm font-semibold text-slate-700">
+              Email
+            </label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-[#006D77]"
+              required
+            />
+          </div>
           <div>
             <label htmlFor="password" className="mb-2 block text-sm font-semibold text-slate-700">
               Password

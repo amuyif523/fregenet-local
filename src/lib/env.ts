@@ -19,7 +19,6 @@ const envSchema = z
 
     DATABASE_URL: z.string().min(1, "DATABASE_URL is required."),
 
-    ADMIN_PASSWORD_HASH: z.string().optional(),
     ADMIN_SESSION_SECRET: z.string().optional(),
     DONATION_STATUS_TOKEN_SECRET: z.string().optional(),
     CRON_SECRET: z.string().optional(),
@@ -52,7 +51,6 @@ const envSchema = z
     }
 
     const requiredSecrets: Array<keyof typeof value> = [
-      "ADMIN_PASSWORD_HASH",
       "ADMIN_SESSION_SECRET",
       "DONATION_STATUS_TOKEN_SECRET",
       "CRON_SECRET",

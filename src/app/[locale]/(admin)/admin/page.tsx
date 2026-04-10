@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
+import PermissionDeniedToast from "./PermissionDeniedToast";
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("en-US", {
@@ -20,11 +21,15 @@ function formatDate(value: Date, locale: string) {
 }
 
 export default async function AdminPage({
-  params
+  params,
+  searchParams
 }: {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ denied?: string }>;
 }) {
   const { locale } = await params;
+  const query = await searchParams;
+  const showDeniedToast = query.denied === "1";
   const t = await getTranslations();
 
   const cookieStore = await cookies();
@@ -62,7 +67,7 @@ export default async function AdminPage({
   // Fetch ERP Data (Scoped)
   const [staffCount, studentCount, expenseAggregate] = await Promise.all([
     prisma.staff.count({ where: { isActive: true, ...centerScope } }),
-    prisma.student.count({ where: { isActive: true, ...centerScope } }),
+    prisma.student.count({ where: { status: "ACTIVE", ...centerScope } }),
     prisma.schoolExpense.aggregate({
       _sum: { amount: true },
       where: centerScope
@@ -104,6 +109,7 @@ export default async function AdminPage({
 
   return (
     <section className="space-y-6">
+      <PermissionDeniedToast show={showDeniedToast} />
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h1 className="text-3xl font-black text-[#006D77]">
           {isGlobal ? t("Admin.dashboardTitle") : "Center Dashboard"}

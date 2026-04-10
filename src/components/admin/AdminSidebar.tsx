@@ -4,8 +4,9 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
-import { Banknote, BriefcaseBusiness, Home, Mail, Newspaper, Users, Package, DollarSign, GraduationCap } from "lucide-react";
+import { Banknote, BriefcaseBusiness, Home, Mail, Newspaper, Users, Package, DollarSign, GraduationCap, ClipboardCheck, UserCircle2 } from "lucide-react";
 import { setCenterScope } from "@/lib/center-actions";
+import { canAccessAdminPath, canUseGlobalCenterScope } from "@/lib/rbac";
 
 const foundationItems = [
   { key: "overview", href: "", icon: Home, label: "overview" },
@@ -13,12 +14,15 @@ const foundationItems = [
   { key: "projects", href: "/projects", icon: BriefcaseBusiness, label: "projects" },
   { key: "newsletters", href: "/newsletters", icon: Newspaper, label: "newsletters" },
   { key: "messages", href: "/messages", icon: Mail, label: "messages" },
-  { key: "governance", href: "/governance", icon: Users, label: "governance" }
+  { key: "governance", href: "/governance", icon: Users, label: "governance" },
+  { key: "activity", href: "/activity", icon: ClipboardCheck, label: "activity" }
 ] as const;
 
 const schoolItems = [
+  { key: "profile", href: "/profile", icon: UserCircle2, label: "profile" },
   { key: "staff", href: "/staff", icon: Users, label: "staff" },
   { key: "inventory", href: "/inventory", icon: Package, label: "inventory" },
+  { key: "attendance", href: "/attendance", icon: ClipboardCheck, label: "attendance" },
   { key: "finance", href: "/finance", icon: DollarSign, label: "finance" },
   { key: "students", href: "/students", icon: GraduationCap, label: "students" }
 ] as const;
@@ -60,7 +64,7 @@ export default function AdminSidebar({
     });
   };
 
-  const showGlobal = userRole === "admin" || userRole === "ADMIN" || userRole === "SUPERADMIN" || userRole === "DIRECTOR";
+  const showGlobal = canUseGlobalCenterScope(userRole);
 
   const onLogout = async () => {
     try {
@@ -99,7 +103,7 @@ export default function AdminSidebar({
         <div>
           <p className="px-3 text-[10px] font-black uppercase tracking-[0.15em] text-white/50 mb-2">Foundation</p>
           <div className="space-y-1 text-sm font-semibold">
-            {foundationItems.map((item) => {
+            {foundationItems.filter((item) => canAccessAdminPath(userRole, `/${locale}/admin${item.href}`)).map((item) => {
               const href = `/${locale}/admin${item.href}`;
               const Icon = item.icon;
               const isActive = pathname === href;
@@ -126,7 +130,7 @@ export default function AdminSidebar({
         <div>
            <p className="px-3 text-[10px] font-black uppercase tracking-[0.15em] text-white/50 mb-2">School ERP</p>
            <div className="space-y-1 text-sm font-semibold">
-            {schoolItems.map((item) => {
+            {schoolItems.filter((item) => canAccessAdminPath(userRole, `/${locale}/admin${item.href}`)).map((item) => {
               const href = `/${locale}/admin${item.href}`;
               const Icon = item.icon;
               const isActive = pathname === href || pathname.startsWith(href);

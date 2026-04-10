@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import { prisma } from "@/lib/prisma";
 import { verifySession } from "@/lib/auth-guard";
+import { ROLE_DIRECTOR, ROLE_FINANCE, ROLE_SUPERADMIN, assertRoleAllowed } from "@/lib/rbac";
 import type { PaymentStatus, Prisma } from "@/../prisma/generated/client";
 
 function buildFilter(searchParams: URLSearchParams) {
@@ -26,8 +27,12 @@ function buildFilter(searchParams: URLSearchParams) {
 
 export async function GET(request: NextRequest) {
   try {
-    await verifySession();
-  } catch {
+    const user = await verifySession();
+    assertRoleAllowed(user.role, [ROLE_SUPERADMIN, ROLE_DIRECTOR, ROLE_FINANCE]);
+  } catch (error: unknown) {
+    if (error instanceof Error && error.message === "Forbidden") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

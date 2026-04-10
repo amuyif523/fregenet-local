@@ -3,8 +3,10 @@ import { getIronSession, unsealData, type IronSession, type SessionOptions } fro
 import type { NextRequest } from "next/server";
 
 export type AdminUserSession = {
-  id: "admin";
-  role: "admin";
+  id: string;
+  role: "SUPERADMIN" | "DIRECTOR" | "FINANCE" | "ADMIN" | "STAFF";
+  email: string;
+  staffId: string;
 };
 
 export type AdminSessionData = {
@@ -72,5 +74,5 @@ export function isAdminSessionAuthenticated(session: AdminSessionData | null | u
     return false;
   }
 
-  return session.isLoggedIn === true || Boolean(session.user?.id === "admin" && session.user?.role === "admin");
+  return session.isLoggedIn === true || Boolean(session.user?.id);
 }

@@ -2,6 +2,7 @@ import createMiddleware from "next-intl/middleware";
 import { unsealData } from "iron-session";
 import { NextResponse, type NextRequest } from "next/server";
 import { defaultLocale, locales } from "@/lib/i18n-config";
+import { canAccessAdminPath } from "@/lib/rbac";
 
 const intlMiddleware = createMiddleware({
   locales,
@@ -45,7 +46,7 @@ function isSessionAuthenticated(session: MiddlewareAdminSessionData | null | und
     return false;
   }
 
-  return session.isLoggedIn === true || Boolean(session.user?.id === "admin" && session.user?.role === "admin");
+  return session.isLoggedIn === true || Boolean(session.user?.id);
 }
 
 function redirectToLogin(request: NextRequest, locale: (typeof locales)[number]) {
@@ -85,6 +86,12 @@ export default async function middleware(request: NextRequest) {
 
       if (!isSessionAuthenticated(sessionData)) {
         return redirectToLogin(request, locale);
+      }
+
+      if (!canAccessAdminPath(sessionData?.user?.role, pathname)) {
+        const deniedUrl = new URL(`/${locale}/admin`, request.url);
+        deniedUrl.searchParams.set("denied", "1");
+        return NextResponse.redirect(deniedUrl);
       }
     } catch {
       return redirectToLogin(request, locale);

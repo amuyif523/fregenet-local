@@ -4,6 +4,7 @@ import AdminShell from "@/components/admin/AdminShell";
 import { prisma } from "@/lib/prisma";
 import { getAdminSessionUser } from "@/lib/admin-auth";
 import { clearCenterScope } from "@/lib/center-actions";
+import { canUseGlobalCenterScope } from "@/lib/rbac";
 
 export default async function AdminLayout({
   children,
@@ -37,7 +38,7 @@ export default async function AdminLayout({
   }
 
   // RBAC fallback for GLOBAL
-  if (activeCenter === "GLOBAL" && userRole !== "admin" && userRole !== "ADMIN" && userRole !== "SUPERADMIN" && userRole !== "DIRECTOR") {
+  if (activeCenter === "GLOBAL" && !canUseGlobalCenterScope(userRole)) {
     // Force them into the first center if they don't have global rights
     if (centers.length > 0) {
       activeCenter = centers[0].id;

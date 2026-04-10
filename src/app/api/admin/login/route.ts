@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { createAdminSession, verifyAdminPassword } from "@/lib/admin-auth";
+import { createAdminSession, verifyAdminCredentials } from "@/lib/admin-auth";
 import { logCriticalEvent } from "@/lib/logger";
 
 const schema = z.object({
+  email: z.string().email(),
   password: z.string().min(1)
 });
 
@@ -82,31 +83,23 @@ export async function POST(request: Request) {
 
   if (!parsed.success) {
     registerFailedAttempt(clientIp);
-    return NextResponse.json({ error: "Password is required." }, { status: 400 });
+    return NextResponse.json({ error: "Email and password are required." }, { status: 400 });
   }
 
-
-  let isValid = false;
-
-  try {
-    isValid = await verifyAdminPassword(parsed.data.password);
-  } catch {
-    return NextResponse.json({ error: "Admin authentication is not configured." }, { status: 500 });
-  }
-
-  if (!isValid) {
+  const account = await verifyAdminCredentials(parsed.data.email, parsed.data.password);
+  if (!account) {
     registerFailedAttempt(clientIp);
     return NextResponse.json({ error: "Invalid credentials." }, { status: 401 });
   }
 
-  await createAdminSession();
+  await createAdminSession(account);
   clearAttempts(clientIp);
 
   logCriticalEvent({
     event: "ADMIN_LOGIN",
-    userId: "admin",
+    userId: account.id,
     ip: clientIp,
-    message: "Admin login successful."
+    message: `Admin login successful (${account.email}).`
   });
 
   return NextResponse.json({ ok: true });

@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import crypto from "node:crypto";
+import { revalidatePath } from "next/cache";
 import { getAdminSessionUser } from "@/lib/admin-auth";
 import { reconcilePendingDonations } from "@/lib/reconcile";
 import { getIpFromHeaders } from "@/lib/logger";
+import { ROLE_DIRECTOR, ROLE_FINANCE, ROLE_SUPERADMIN, assertRoleAllowed } from "@/lib/rbac";
 
 function safeEqual(a: string, b: string) {
   const aBuffer = Buffer.from(a);
@@ -31,10 +33,21 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  if (!isCronAuthorized && "role" in user) {
+    try {
+      assertRoleAllowed(user.role, [ROLE_SUPERADMIN, ROLE_DIRECTOR, ROLE_FINANCE]);
+    } catch {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+  }
+
   const result = await reconcilePendingDonations({
     actorUserId: user.id,
     actorIp: requestIp
   });
+
+  revalidatePath("/en/transparency", "page");
+  revalidatePath("/am/transparency", "page");
 
   return NextResponse.json({
     ok: true,

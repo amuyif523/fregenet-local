@@ -9,7 +9,10 @@ import { saveUpload } from "@/lib/storage";
 import { extractPdfPath } from "@/lib/newsletter-files";
 import { verifySession } from "@/lib/auth-guard";
 import { getIpFromHeaders, logCriticalEvent } from "@/lib/logger";
+import { ROLE_DIRECTOR, ROLE_SUPERADMIN, assertRoleAllowed } from "@/lib/rbac";
 import type { AdminFormState } from "@/components/admin/formState";
+
+const CONTENT_ADMIN_ROLES = [ROLE_SUPERADMIN, ROLE_DIRECTOR] as const;
 
 const projectSchema = z.object({
   title_en: z.string().min(1, "English title is required."),
@@ -33,10 +36,7 @@ const updateProjectSchema = projectSchema.extend({
 
 export async function createProjectAction(_prev: AdminFormState, formData: FormData): Promise<AdminFormState> {
   const user = await verifySession();
-
-  if (!user) {
-    throw new Error("Unauthorized");
-  }
+  assertRoleAllowed(user.role, [...CONTENT_ADMIN_ROLES]);
 
   const parsed = projectSchema.safeParse({
     title_en: String(formData.get("title_en") ?? "").trim(),
@@ -129,10 +129,7 @@ export async function createProjectAction(_prev: AdminFormState, formData: FormD
 
 export async function updateProjectAction(_prev: AdminFormState, formData: FormData): Promise<AdminFormState> {
   const user = await verifySession();
-
-  if (!user) {
-    throw new Error("Unauthorized");
-  }
+  assertRoleAllowed(user.role, [...CONTENT_ADMIN_ROLES]);
 
   const parsed = updateProjectSchema.safeParse({
     id: String(formData.get("id") ?? "").trim(),
@@ -244,10 +241,7 @@ const updateNewsletterSchema = newsletterSchema.extend({
 
 export async function createNewsletterAction(_prev: AdminFormState, formData: FormData): Promise<AdminFormState> {
   const user = await verifySession();
-
-  if (!user) {
-    throw new Error("Unauthorized");
-  }
+  assertRoleAllowed(user.role, [...CONTENT_ADMIN_ROLES]);
 
   const parsed = newsletterSchema.safeParse({
     title_en: String(formData.get("title_en") ?? "").trim(),
@@ -340,10 +334,7 @@ export async function createNewsletterAction(_prev: AdminFormState, formData: Fo
 
 export async function updateNewsletterAction(_prev: AdminFormState, formData: FormData): Promise<AdminFormState> {
   const user = await verifySession();
-
-  if (!user) {
-    throw new Error("Unauthorized");
-  }
+  assertRoleAllowed(user.role, [...CONTENT_ADMIN_ROLES]);
 
   const parsed = updateNewsletterSchema.safeParse({
     id: String(formData.get("id") ?? "").trim(),
@@ -442,10 +433,7 @@ export async function updateNewsletterAction(_prev: AdminFormState, formData: Fo
 
 export async function deleteNewsletterAction(formData: FormData) {
   const user = await verifySession();
-
-  if (!user) {
-    throw new Error("Unauthorized");
-  }
+  assertRoleAllowed(user.role, [...CONTENT_ADMIN_ROLES]);
 
   const id = String(formData.get("id") ?? "").trim();
   const locale = String(formData.get("locale") ?? "en").toLowerCase();
@@ -466,10 +454,7 @@ export async function deleteNewsletterAction(formData: FormData) {
 
 export async function toggleProjectStatusAction(formData: FormData) {
   const user = await verifySession();
-
-  if (!user) {
-    throw new Error("Unauthorized");
-  }
+  assertRoleAllowed(user.role, [...CONTENT_ADMIN_ROLES]);
 
   const projectId = String(formData.get("projectId") ?? "");
   const currentStatus = String(formData.get("currentStatus") ?? "ACTIVE").toUpperCase();
@@ -497,10 +482,7 @@ export async function toggleProjectStatusAction(formData: FormData) {
 
 export async function deleteProjectAction(formData: FormData) {
   const user = await verifySession();
-
-  if (!user) {
-    throw new Error("Unauthorized");
-  }
+  assertRoleAllowed(user.role, [...CONTENT_ADMIN_ROLES]);
 
   const projectId = String(formData.get("projectId") ?? "").trim();
   const locale = String(formData.get("locale") ?? "en").toLowerCase();
@@ -599,10 +581,7 @@ async function saveGovernanceImage(file: FormDataEntryValue | null) {
 
 export async function createGovernanceMember(_prev: AdminFormState, formData: FormData): Promise<AdminFormState> {
   const user = await verifySession();
-
-  if (!user) {
-    throw new Error("Unauthorized");
-  }
+  assertRoleAllowed(user.role, [...CONTENT_ADMIN_ROLES]);
 
   const parsed = createGovernanceSchema.safeParse({
     name_en: String(formData.get("name_en") ?? "").trim(),
@@ -658,10 +637,7 @@ export async function createGovernanceMember(_prev: AdminFormState, formData: Fo
 
 export async function updateGovernanceMember(_prev: AdminFormState, formData: FormData): Promise<AdminFormState> {
   const user = await verifySession();
-
-  if (!user) {
-    throw new Error("Unauthorized");
-  }
+  assertRoleAllowed(user.role, [...CONTENT_ADMIN_ROLES]);
 
   const parsed = updateGovernanceSchema.safeParse({
     id: String(formData.get("id") ?? "").trim(),
@@ -720,10 +696,7 @@ export async function updateGovernanceMember(_prev: AdminFormState, formData: Fo
 
 export async function deleteGovernanceMember(_prev: AdminFormState, formData: FormData): Promise<AdminFormState> {
   const user = await verifySession();
-
-  if (!user) {
-    throw new Error("Unauthorized");
-  }
+  assertRoleAllowed(user.role, [...CONTENT_ADMIN_ROLES]);
 
   const parsed = deleteGovernanceSchema.safeParse({
     id: String(formData.get("id") ?? "").trim(),
