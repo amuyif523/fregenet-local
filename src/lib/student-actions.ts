@@ -138,7 +138,7 @@ export async function upsertStudentWithGuardian(formData: FormData) {
         where: { id: resolvedGuardianId },
         data: {
           name: guardianName,
-          phoneNumber: guardianPhoneNumber,
+          phoneNumber: normalizedGuardianPhone,
           relationship: guardianRelationship,
           email: guardianEmailRaw || null,
           address: guardianAddressRaw || null
@@ -162,7 +162,7 @@ export async function upsertStudentWithGuardian(formData: FormData) {
           where: { id: matchingGuardian.id },
           data: {
             name: guardianName,
-            phoneNumber: guardianPhoneNumber,
+            phoneNumber: normalizedGuardianPhone,
             relationship: guardianRelationship,
             email: guardianEmailRaw || null,
             address: guardianAddressRaw || null
@@ -172,7 +172,7 @@ export async function upsertStudentWithGuardian(formData: FormData) {
         const createdGuardian = await tx.guardian.create({
           data: {
             name: guardianName,
-            phoneNumber: guardianPhoneNumber,
+            phoneNumber: normalizedGuardianPhone,
             relationship: guardianRelationship,
             email: guardianEmailRaw || null,
             address: guardianAddressRaw || null
@@ -387,7 +387,7 @@ export async function bulkImportStudentsFromCsv(formData: FormData) {
         const createdGuardian = await prisma.guardian.create({
           data: {
             name: guardianName,
-            phoneNumber: guardianPhoneRaw,
+            phoneNumber: normalizedPhone,
             relationship: guardianRelationship,
             email: guardianEmail,
             address: guardianAddress

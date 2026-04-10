@@ -8,17 +8,19 @@ export function normalizeEthiopianPhone(value: string) {
     return "";
   }
 
+  let local = digitsOnly;
+
   if (digitsOnly.startsWith("2510") && digitsOnly.length === 13) {
-    return digitsOnly.slice(4);
+    local = digitsOnly.slice(4);
+  } else if (digitsOnly.startsWith("251") && digitsOnly.length === 12) {
+    local = digitsOnly.slice(3);
+  } else if (digitsOnly.startsWith("0") && digitsOnly.length === 10) {
+    local = digitsOnly.slice(1);
   }
 
-  if (digitsOnly.startsWith("251") && digitsOnly.length === 12) {
-    return digitsOnly.slice(3);
+  if (!/^[79]\d{8}$/.test(local)) {
+    return "";
   }
 
-  if (digitsOnly.startsWith("0") && digitsOnly.length === 10) {
-    return digitsOnly.slice(1);
-  }
-
-  return digitsOnly;
+  return local;
 }
