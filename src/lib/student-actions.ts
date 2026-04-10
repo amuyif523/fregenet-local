@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { verifySession } from "@/lib/auth-guard";
 import { ROLE_DIRECTOR, ROLE_STAFF, ROLE_SUPERADMIN, assertRoleAllowed } from "@/lib/rbac";
+import { normalizeEthiopianPhone } from "@/lib/utils";
 
 function assertCenterScope(centerId: string) {
   if (!centerId || centerId === "GLOBAL") {
@@ -42,10 +43,6 @@ function parseIsoDateString(value: string, fieldName: string) {
     throw new Error(`${fieldName} must be a valid date (YYYY-MM-DD).`);
   }
   return parsed;
-}
-
-function normalizePhone(value: string) {
-  return value.replace(/[\s\-()]/g, "").trim();
 }
 
 function parseCsvLine(line: string) {
@@ -116,6 +113,10 @@ export async function upsertStudentWithGuardian(formData: FormData) {
 
   const guardianName = requiredString(formData.get("guardianName"), "Guardian name");
   const guardianPhoneNumber = requiredString(formData.get("guardianPhoneNumber"), "Guardian phone number");
+  const normalizedGuardianPhone = normalizeEthiopianPhone(guardianPhoneNumber);
+  if (!normalizedGuardianPhone) {
+    throw new Error("Guardian phone number is invalid.");
+  }
   const guardianRelationship = requiredString(formData.get("guardianRelationship"), "Guardian relationship") as
     | "MOTHER"
     | "FATHER"
@@ -144,16 +145,41 @@ export async function upsertStudentWithGuardian(formData: FormData) {
         }
       });
     } else {
-      const createdGuardian = await tx.guardian.create({
-        data: {
-          name: guardianName,
-          phoneNumber: guardianPhoneNumber,
-          relationship: guardianRelationship,
-          email: guardianEmailRaw || null,
-          address: guardianAddressRaw || null
+      const guardianRows = await tx.guardian.findMany({
+        select: {
+          id: true,
+          phoneNumber: true
         }
       });
-      resolvedGuardianId = createdGuardian.id;
+
+      const matchingGuardian = guardianRows.find(
+        (guardian) => normalizeEthiopianPhone(guardian.phoneNumber) === normalizedGuardianPhone
+      );
+
+      if (matchingGuardian) {
+        resolvedGuardianId = matchingGuardian.id;
+        await tx.guardian.update({
+          where: { id: matchingGuardian.id },
+          data: {
+            name: guardianName,
+            phoneNumber: guardianPhoneNumber,
+            relationship: guardianRelationship,
+            email: guardianEmailRaw || null,
+            address: guardianAddressRaw || null
+          }
+        });
+      } else {
+        const createdGuardian = await tx.guardian.create({
+          data: {
+            name: guardianName,
+            phoneNumber: guardianPhoneNumber,
+            relationship: guardianRelationship,
+            email: guardianEmailRaw || null,
+            address: guardianAddressRaw || null
+          }
+        });
+        resolvedGuardianId = createdGuardian.id;
+      }
     }
 
     if (!resolvedGuardianId) {
@@ -297,7 +323,7 @@ export async function bulkImportStudentsFromCsv(formData: FormData) {
 
   const guardianByPhone = new Map<string, { id: string }>();
   for (const guardian of guardianRows) {
-    const normalized = normalizePhone(guardian.phoneNumber);
+    const normalized = normalizeEthiopianPhone(guardian.phoneNumber);
     if (normalized) {
       guardianByPhone.set(normalized, { id: guardian.id });
     }
@@ -350,7 +376,7 @@ export async function bulkImportStudentsFromCsv(formData: FormData) {
         throw new Error("guardian_relationship must be MOTHER, FATHER, or LEGAL_GUARDIAN.");
       }
 
-      const normalizedPhone = normalizePhone(guardianPhoneRaw);
+      const normalizedPhone = normalizeEthiopianPhone(guardianPhoneRaw);
       if (!normalizedPhone) {
         throw new Error("guardian_phone is invalid.");
       }
