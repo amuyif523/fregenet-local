@@ -140,10 +140,11 @@ enum ItemCategory {
 }
 
 enum ExpenseCategory {
-  FOOD
+  FOOD_PROGRAM
   UTILITIES
   MAINTENANCE
   CONSTRUCTION
+  SUPPLIES
 }
 
 enum UserRole {
@@ -192,8 +193,9 @@ model PayrollRecord {
   year                Int
   grossSalary         Decimal  @db.Decimal(12, 2)
   netSalary           Decimal  @db.Decimal(12, 2)
-  incomeTax           Decimal  @db.Decimal(12, 2)
-  pensionContribution Decimal  @db.Decimal(12, 2)
+  incomeTax                   Decimal  @db.Decimal(12, 2)
+  pensionContribution         Decimal  @db.Decimal(12, 2)
+  employerPensionContribution Decimal  @db.Decimal(12, 2) @default(0.00)
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
@@ -222,11 +224,11 @@ model SchoolExpense {
   amount      Decimal         @db.Decimal(12, 2)
   category    ExpenseCategory
   description String?
-  centerId    String
+  centerId    String?
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
 
-  center SchoolCenter @relation(fields: [centerId], references: [id], onDelete: Restrict)
+  center SchoolCenter? @relation(fields: [centerId], references: [id], onDelete: SetNull)
 
   @@index([centerId])
 }

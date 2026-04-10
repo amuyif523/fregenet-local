@@ -70,6 +70,7 @@ export async function processCenterPayroll(centerId: string, month: number, year
     
     // Pension is 7% of Gross Base Salary
     const pensionContribution = grossSalary.times(0.07);
+    const employerPensionContribution = grossSalary.times(0.11);
     
     // Taxable Income = Gross Salary - Pension
     const taxableIncome = grossSalary.minus(pensionContribution);
@@ -87,7 +88,8 @@ export async function processCenterPayroll(centerId: string, month: number, year
       grossSalary: grossSalary.toNumber(),
       netSalary: netSalary.toNumber(),
       incomeTax: incomeTax.toNumber(),
-      pensionContribution: pensionContribution.toNumber()
+      pensionContribution: pensionContribution.toNumber(),
+      employerPensionContribution: employerPensionContribution.toNumber()
     };
   });
 
