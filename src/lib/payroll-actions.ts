@@ -5,6 +5,7 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { verifySession } from "@/lib/auth-guard";
 import { ROLE_DIRECTOR, ROLE_FINANCE, ROLE_SUPERADMIN, assertRoleAllowed } from "@/lib/rbac";
 import { TRANSPARENCY_IMPACT_TAG } from "@/lib/cache-tags";
+import { logServerActionFailure } from "@/lib/logger";
 
 // Workaround for `Decimal` type which is sometimes difficult to unwrap natively from standard imports in Next.js builds
 import Decimal from "decimal.js";
@@ -34,73 +35,77 @@ function calculateEthiopianTax(taxableIncomeVal: string | number | typeof Decima
 }
 
 export async function processCenterPayroll(centerId: string, month: number, year: number) {
-  const user = await verifySession();
-  assertRoleAllowed(user.role, [ROLE_SUPERADMIN, ROLE_DIRECTOR, ROLE_FINANCE]);
+  let actorUserId: string | null = null;
 
-  if (centerId === "GLOBAL") {
-    throw new Error("Cannot process payroll globally. Select a specific center.");
-  }
+  try {
+    const user = await verifySession();
+    actorUserId = user.id;
+    assertRoleAllowed(user.role, [ROLE_SUPERADMIN, ROLE_DIRECTOR, ROLE_FINANCE]);
+
+    if (centerId === "GLOBAL") {
+      throw new Error("Cannot process payroll globally. Select a specific center.");
+    }
 
   // 1. Fetch all active staff for the center
-  const staffMembers = await prisma.staff.findMany({
-    where: {
-      centerId: centerId,
-      isActive: true
-    }
-  });
+    const staffMembers = await prisma.staff.findMany({
+      where: {
+        centerId: centerId,
+        isActive: true
+      }
+    });
 
-  if (staffMembers.length === 0) {
-    return { success: false, message: "No active staff found for this center." };
-  }
+    if (staffMembers.length === 0) {
+      return { success: false, message: "No active staff found for this center." };
+    }
 
   // 2. Check if payroll for this exact month/year has already been recorded
-  const existingRuns = await prisma.payrollRecord.findMany({
-    where: {
-      staffId: { in: staffMembers.map(s => s.id) },
-      month,
-      year
-    }
-  });
+    const existingRuns = await prisma.payrollRecord.findMany({
+      where: {
+        staffId: { in: staffMembers.map(s => s.id) },
+        month,
+        year
+      }
+    });
 
-  const existingStaffIds = new Set(existingRuns.map(r => r.staffId));
-  const staffToProcess = staffMembers.filter(s => !existingStaffIds.has(s.id));
+    const existingStaffIds = new Set(existingRuns.map(r => r.staffId));
+    const staffToProcess = staffMembers.filter(s => !existingStaffIds.has(s.id));
 
-  if (staffToProcess.length === 0) {
-    if (existingRuns.length > 0) {
-      await prisma.sealedFinanceMonth.upsert({
-        where: {
-          centerId_month_year: {
+    if (staffToProcess.length === 0) {
+      if (existingRuns.length > 0) {
+        await prisma.sealedFinanceMonth.upsert({
+          where: {
+            centerId_month_year: {
+              centerId,
+              month,
+              year
+            }
+          },
+          create: {
             centerId,
             month,
-            year
+            year,
+            sealedBy: user.id
+          },
+          update: {
+            sealedBy: user.id
           }
-        },
-        create: {
-          centerId,
-          month,
-          year,
-          sealedBy: user.id
-        },
-        update: {
-          sealedBy: user.id
-        }
-      });
+        });
 
-      await prisma.auditLog.create({
-        data: {
-          actorId: user.id,
-          actionType: "SEAL_FINANCE_MONTH",
-          notes: "Payroll already finalized. Month remains sealed.",
-          metadata: { centerId, month, year }
-        }
-      });
+        await prisma.auditLog.create({
+          data: {
+            actorId: user.id,
+            actionType: "SEAL_FINANCE_MONTH",
+            notes: "Payroll already finalized. Month remains sealed.",
+            metadata: { centerId, month, year }
+          }
+        });
+      }
+
+      return { success: false, message: "Payroll already processed for all active staff this month." };
     }
 
-    return { success: false, message: "Payroll already processed for all active staff this month." };
-  }
-
   // 3. Compute pay records
-  const payrollRecordsData = staffToProcess.map(staff => {
+    const payrollRecordsData = staffToProcess.map(staff => {
     // Financial Safety: Use imported decimal.js instance
     const grossSalary = new Decimal(staff.baseSalary.toString());
     
@@ -127,50 +132,59 @@ export async function processCenterPayroll(centerId: string, month: number, year
       pensionContribution: pensionContribution.toNumber(),
       employerPensionContribution: employerPensionContribution.toNumber()
     };
-  });
+    });
 
   // 4. Commit as a single Transaction to ensure atomicity
-  await prisma.$transaction(
-    payrollRecordsData.map(data => prisma.payrollRecord.create({ data }))
-  );
+    await prisma.$transaction(
+      payrollRecordsData.map(data => prisma.payrollRecord.create({ data }))
+    );
 
-  await prisma.sealedFinanceMonth.upsert({
-    where: {
-      centerId_month_year: {
+    await prisma.sealedFinanceMonth.upsert({
+      where: {
+        centerId_month_year: {
+          centerId,
+          month,
+          year
+        }
+      },
+      create: {
         centerId,
         month,
-        year
+        year,
+        sealedBy: user.id
+      },
+      update: {
+        sealedBy: user.id
       }
-    },
-    create: {
-      centerId,
-      month,
-      year,
-      sealedBy: user.id
-    },
-    update: {
-      sealedBy: user.id
-    }
-  });
+    });
 
-  await prisma.auditLog.create({
-    data: {
-      actorId: user.id,
-      actionType: "SEAL_FINANCE_MONTH",
-      notes: "Month sealed automatically after payroll processing.",
-      metadata: { centerId, month, year, processedCount: payrollRecordsData.length }
-    }
-  });
+    await prisma.auditLog.create({
+      data: {
+        actorId: user.id,
+        actionType: "SEAL_FINANCE_MONTH",
+        notes: "Month sealed automatically after payroll processing.",
+        metadata: { centerId, month, year, processedCount: payrollRecordsData.length }
+      }
+    });
 
   // 5. Revalidate cache
-  revalidatePath("/[locale]/admin/staff", "page");
-  revalidatePath("/[locale]/admin/finance", "page");
-  revalidatePath("/[locale]/admin/activity", "page");
-  revalidateTag(TRANSPARENCY_IMPACT_TAG);
+    revalidatePath("/[locale]/admin/staff", "page");
+    revalidatePath("/[locale]/admin/finance", "page");
+    revalidatePath("/[locale]/admin/activity", "page");
+    revalidateTag(TRANSPARENCY_IMPACT_TAG);
   
-  return { 
-    success: true, 
-    message: `Processed payroll for ${payrollRecordsData.length} staff members.`,
-    processedCount: payrollRecordsData.length
-  };
+    return { 
+      success: true, 
+      message: `Processed payroll for ${payrollRecordsData.length} staff members.`,
+      processedCount: payrollRecordsData.length
+    };
+  } catch (error: unknown) {
+    await logServerActionFailure({
+      action: "processCenterPayroll",
+      userId: actorUserId,
+      message: error instanceof Error ? error.message : "Payroll processing failed.",
+      metadata: { centerId, month, year }
+    });
+    throw error;
+  }
 }
