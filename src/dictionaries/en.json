@@ -1,0 +1,109 @@
+{
+  "Nav": {
+    "home": "Home",
+    "schools": "Our Schools",
+    "governance": "Governance",
+    "projects": "Impact Projects",
+    "news": "News",
+    "contact": "Contact",
+    "donate": "Donate"
+  },
+  "Hero": {
+    "title": "Building Ethiopia's Future",
+    "subtitle": "Providing holistic education and hope since 2004."
+  },
+  "Stats": {
+    "years": "Years of Service",
+    "students": "Students Served",
+    "sponsorship": "Annual Sponsorship"
+  },
+  "Holistic": {
+    "meals": "Nutrition",
+    "uniforms": "Uniforms",
+    "transport": "Transportation",
+    "stationery": "Stationery Supplies",
+    "textbooks": "Textbooks"
+  },
+  "SchoolsSpotlight": {
+    "title": "The Fregenet Schools",
+    "subtitle": "Operationally focused campuses bringing quality learning to students across urban and rural communities.",
+    "learnMore": "Learn More",
+    "addis": {
+      "title": "Addis Pilot School",
+      "description": "The heart of our mission, providing specialized KG-Level education."
+    },
+    "bishoftu": {
+      "title": "Bishoftu Project",
+      "description": "Expanding our reach to rural communities with modern labs."
+    }
+  },
+  "Testimonial": {
+    "quote": "Because of Fregenet, I didn't just get an education; I got a future.",
+    "author": "FKL Alumnus"
+  },
+  "Legacy": {
+    "title": "Our Legacy",
+    "events": {
+      "2004": "Founded in memory of Fregenet Tafesse.",
+      "2010": "Reached 300+ students.",
+      "2026": "Launching the Digital Learning Initiative."
+    }
+  },
+  "Admin": {
+    "panel": "FKL Admin",
+    "overview": "Overview",
+    "donations": "Donations",
+    "projects": "Projects",
+    "newsletters": "Newsletters",
+    "messages": "Messages",
+    "governance": "Governance",
+    "messagesSubtitle": "Inbox of form submissions from the public contact page.",
+    "noMessages": "No messages yet.",
+    "dashboardTitle": "FKL Local Admin Pulse",
+    "dashboardSubtitle": "Live overview of fundraising, project operations, and publication activity.",
+    "totalDonations": "Total Donations",
+    "totalProjects": "Total Projects",
+    "recentActivities": "Recent Activities",
+    "openDonationLedger": "Open Donation Ledger",
+    "manageProjects": "Manage Projects",
+    "manageNewsletters": "Manage Newsletters",
+    "recentActivity": "Recent Activity",
+    "noRecentActivity": "No recent activity found.",
+    "anonymous": "Anonymous",
+    "donationActivity": "Donation {status} by {donor}",
+    "projectUpdated": "Project {status} updated",
+    "newsletterPublished": "Newsletter published",
+    "newsletterDraft": "Newsletter saved as draft",
+    "backToSite": "Back to Site",
+    "logout": "Logout"
+  },
+  "Contact": {
+    "pageTitle": "Contact FKL Local",
+    "pageSubtitle": "Reach our Addis Ababa office for program and partnership inquiries.",
+    "formTitle": "Send a Message",
+    "namePlaceholder": "Full Name",
+    "emailPlaceholder": "Email",
+    "subjectPlaceholder": "Subject",
+    "messagePlaceholder": "How can we help?",
+    "submit": "Submit Inquiry",
+    "submitting": "Submitting...",
+    "officeTitle": "Addis Ababa Office",
+    "officeAddress": "Lideta Sub-city, Woreda 03, Addis Ababa, Ethiopia"
+  },
+  "Footer": {
+    "description": "Dedicated to providing quality education and life-saving support to Ethiopia's most vulnerable children since 2004.",
+    "contactInfo": "Contact Info",
+    "address": "Addis Ababa, Lideta Sub-city, Woreda 03, Ethiopia",
+    "telegram": "Telegram: @fkl_ethiopia",
+    "linksTitle": "Explore",
+    "projectsLink": "Projects",
+    "newsLink": "News",
+    "governanceLink": "Governance",
+    "contactLink": "Contact",
+    "copyright": "© {year} Fregenet Kidan Lehitsanat. All Rights Reserved."
+  },
+  "Metadata": {
+    "title": "Fregenet Kidan Lehitsanat - Empowering Children",
+    "description": "Empowering children through holistic education in Ethiopia."
+  }
+}

@@ -1,0 +1,41 @@
+# dependencies
+node_modules/
+
+# next.js
+.next/
+out/
+
+# production builds and caches
+dist/
+coverage/
+*.tsbuildinfo
+
+# environment files
+.env
+.env.*
+!.env.example
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# prisma generated client and local state
+prisma/generated/
+
+# uploads and runtime files
+uploads/
+*.sqlite
+*.db
+
+# operating system files
+.DS_Store
+Thumbs.db
+
+# editor settings
+.vscode/
+.idea/
+
+# deployment/build artifacts in this repo
+yegara_dist/

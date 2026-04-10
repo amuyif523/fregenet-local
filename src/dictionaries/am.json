@@ -1,0 +1,109 @@
+{
+  "Nav": {
+    "home": "መነሻ ገጽ",
+    "schools": "ትምህርት ቤቶቻችን",
+    "governance": "አስተዳደር",
+    "projects": "የልማት ስራዎች",
+    "news": "ዜና",
+    "contact": "አግኙን",
+    "donate": "መለገስ"
+  },
+  "Hero": {
+    "title": "የኢትዮጵያን የወደፊት ተስፋ መገንባት",
+    "subtitle": "ከ2004 ጀምሮ የተሟላ ትምህርት እና ተስፋ መስጠት።"
+  },
+  "Stats": {
+    "years": "የአገልግሎት ዓመታት",
+    "students": "የተረዱ ተማሪዎች",
+    "sponsorship": "ዓመታዊ ስፖንሰርሺፕ"
+  },
+  "Holistic": {
+    "meals": "የተመጣጠነ ምግብ",
+    "uniforms": "ዩኒፎርም",
+    "transport": "ትራንስፖርት",
+    "stationery": "የመማሪያ መሳሪያዎች",
+    "textbooks": "የትምህርት መፅሃፍት"
+  },
+  "SchoolsSpotlight": {
+    "title": "የፍሬገነት ትምህርት ቤቶች",
+    "subtitle": "በከተማና በገጠር ማህበረሰቦች ላይ ጥራት ያለው ትምህርት የሚያደርሱ ተቋማት።",
+    "learnMore": "ተጨማሪ ይወቁ",
+    "addis": {
+      "title": "አዲስ ፓይለት ትምህርት ቤት",
+      "description": "የተልዕኳችን ልብ ሆኖ በኬጂ ደረጃ ልዩ ትምህርት ይሰጣል።"
+    },
+    "bishoftu": {
+      "title": "የቢሾፍቱ ፕሮጀክት",
+      "description": "በዘመናዊ ላቦራቶሪዎች የተደገፈ አገልግሎት ወደ ገጠር ማህበረሰቦች እየሰፋ ነው።"
+    }
+  },
+  "Testimonial": {
+    "quote": "በፍሬገነት ምክንያት ትምህርት ብቻ አላገኘሁም፤ የወደፊት ሕይወት አግኝቻለሁ።",
+    "author": "የፍክኤል ተመራቂ"
+  },
+  "Legacy": {
+    "title": "የእኛ ቅርስ",
+    "events": {
+      "2004": "በፍሬገነት ታፈሰ መታሰቢያ ተመስርቶ ተጀመረ።",
+      "2010": "300+ ተማሪዎችን የሚደግፍ ደረጃ ደረሰ።",
+      "2026": "የዲጂታል ትምህርት ፕሮግራም መጀመር ላይ ነው።"
+    }
+  },
+  "Admin": {
+    "panel": "የፍክኤል አስተዳደር",
+    "overview": "አጠቃላይ እይታ",
+    "donations": "ልገሳዎች",
+    "projects": "ፕሮጀክቶች",
+    "newsletters": "ዜና መጽሔቶች",
+    "messages": "መልዕክቶች",
+    "governance": "አስተዳደር",
+    "messagesSubtitle": "ከህዝብ ግንኙነት ገጽ የተላኩ መልዕክቶች ማህደር።",
+    "noMessages": "እስካሁን መልዕክት የለም።",
+    "dashboardTitle": "የFKL አስተዳደር እይታ",
+    "dashboardSubtitle": "የልገሳ፣ የፕሮጀክት እና የህትመት እንቅስቃሴ ቀጥታ እይታ።",
+    "totalDonations": "ጠቅላላ ልገሳ",
+    "totalProjects": "ጠቅላላ ፕሮጀክቶች",
+    "recentActivities": "የቅርብ እንቅስቃሴዎች",
+    "openDonationLedger": "የልገሳ መዝገብ ክፈት",
+    "manageProjects": "ፕሮጀክቶችን አስተዳድር",
+    "manageNewsletters": "ዜና መጽሔቶችን አስተዳድር",
+    "recentActivity": "የቅርብ እንቅስቃሴ",
+    "noRecentActivity": "የቅርብ እንቅስቃሴ አልተገኘም።",
+    "anonymous": "ስም ያልተገለፀ",
+    "donationActivity": "ልገሳ {status} በ {donor}",
+    "projectUpdated": "ፕሮጀክት {status} ተዘምኗል",
+    "newsletterPublished": "ዜና መጽሔት ታትሟል",
+    "newsletterDraft": "ዜና መጽሔት እንደ ረቂቅ ተቀምጧል",
+    "backToSite": "ወደ ድህረ ገጹ ተመለስ",
+    "logout": "ውጣ"
+  },
+  "Contact": {
+    "pageTitle": "FKL Local ያግኙ",
+    "pageSubtitle": "ለፕሮግራም እና ሽርክና ጥያቄዎች የአዲስ አበባ ቢሯችንን ያነጋግሩ።",
+    "formTitle": "መልዕክት ይላኩ",
+    "namePlaceholder": "ሙሉ ስም",
+    "emailPlaceholder": "ኢሜይል",
+    "subjectPlaceholder": "ርዕስ",
+    "messagePlaceholder": "እንዴት ልንረዳዎት?",
+    "submit": "ጥያቄ ላክ",
+    "submitting": "በመላክ ላይ...",
+    "officeTitle": "የአዲስ አበባ ቢሮ",
+    "officeAddress": "ሊደታ ክፍለ ከተማ፣ ወረዳ 03፣ አዲስ አበባ፣ ኢትዮጵያ"
+  },
+  "Footer": {
+    "description": "ከ2004 ጀምሮ ለተጋላጭ ህፃናት ጥራት ያለው ትምህርት እና የህይወት ድጋፍ እየሰጠን ነው።",
+    "contactInfo": "የመገኛ መረጃ",
+    "address": "አዲስ አበባ፣ ሊደታ ክፍለ ከተማ፣ ወረዳ 03፣ ኢትዮጵያ",
+    "telegram": "ቴሌግራም: @fkl_ethiopia",
+    "linksTitle": "አስፈላጊ አገናኞች",
+    "projectsLink": "ፕሮጀክቶች",
+    "newsLink": "ዜና",
+    "governanceLink": "አስተዳደር",
+    "contactLink": "አግኙን",
+    "copyright": "© {year} ፍሬገነት ኪዳን ለህፃናት። መብቱ የተጠበቀ ነው።"
+  },
+  "Metadata": {
+    "title": "ፍሬገነት ኪዳን ለህፃናት - ህፃናትን ማብቃት",
+    "description": "በኢትዮጵያ ህፃናትን በተሟላ ትምህርት እና ድጋፍ ማብቃት።"
+  }
+}

@@ -1,0 +1,50 @@
+services:
+  fregenet-db:
+    image: mariadb:11.4
+    container_name: fregenet-db
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+      MARIADB_DATABASE: ${MARIADB_DATABASE}
+      MARIADB_USER: ${MARIADB_USER}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD}
+    volumes:
+      - fregenet_db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mariadb-admin", "ping", "-h", "localhost", "-u${MARIADB_USER}", "-p${MARIADB_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - private
+
+  fregenet-app:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    container_name: fregenet-app
+    restart: unless-stopped
+    depends_on:
+      fregenet-db:
+        condition: service_healthy
+    env_file:
+      - .env.production
+    environment:
+      DATABASE_URL: mysql://${MARIADB_USER}:${MARIADB_PASSWORD}@fregenet-db:3306/${MARIADB_DATABASE}
+      STORAGE_LOCAL_ROOT: ${STORAGE_LOCAL_ROOT:-/app/public/uploads}
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./data/uploads:${STORAGE_LOCAL_ROOT:-/app/public/uploads}
+    networks:
+      - private
+      - public
+
+volumes:
+  fregenet_db_data:
+
+networks:
+  private:
+    name: fregenet-private
+  public:
+    name: fregenet-public

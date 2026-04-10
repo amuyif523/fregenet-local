@@ -1,0 +1,17 @@
+services:
+  mariadb:
+    image: mariadb:11.4
+    container_name: fkl_mariadb
+    restart: unless-stopped
+    ports:
+      - "3308:3306"
+    environment:
+      MARIADB_ROOT_PASSWORD: root
+      MARIADB_DATABASE: fkl_local
+      MARIADB_USER: fkl
+      MARIADB_PASSWORD: fkl_password
+    volumes:
+      - mariadb_data:/var/lib/mysql
+
+volumes:
+  mariadb_data:

@@ -1,0 +1,38 @@
+{
+  "name": "fregenet-local",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack -p 3001",
+    "build": "next build",
+    "start": "next start -p 3001",
+    "lint": "next lint",
+    "generate:admin-password-hash": "node -e \"const bcrypt=require('bcryptjs');const pwd=process.argv[1];if(!pwd){console.error('Usage: npm run generate:admin-password-hash -- \\\"your-password\\\"');process.exit(1);}console.log(bcrypt.hashSync(pwd,12));\"",
+    "generate:session-secret": "node -e \"console.log(require('crypto').randomBytes(48).toString('hex'))\""
+  },
+  "dependencies": {
+    "@prisma/client": "^6.5.0",
+    "bcryptjs": "^3.0.3",
+    "iron-session": "^8.0.4",
+    "lucide-react": "^0.492.0",
+    "next": "15.2.4",
+    "next-intl": "^4.0.2",
+    "prisma": "^6.5.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "xlsx": "^0.18.5",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "@types/react": "^19.0.11",
+    "@types/react-dom": "^19.0.4",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "^15.2.4",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^3.4.17",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2"
+  }
+}
