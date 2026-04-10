@@ -9,7 +9,7 @@ ZIP_PATH="$PROJECT_ROOT/yegara-deploy.zip"
 
 cd "$PROJECT_ROOT"
 
-echo "[1/10] Pre-flight checks"
+echo "[1/12] Pre-flight checks"
 if ! command -v npm >/dev/null 2>&1; then
   echo "Error: npm is required but was not found in PATH."
   exit 1
@@ -22,6 +22,12 @@ fi
 
 if ! command -v unzip >/dev/null 2>&1; then
   echo "Error: unzip is required but was not found in PATH."
+  exit 1
+fi
+
+echo "[2/12] Validating environment"
+if ! /bin/bash "$PROJECT_ROOT/scripts/check-env.sh"; then
+  echo "Error: environment validation failed."
   exit 1
 fi
 
@@ -51,7 +57,7 @@ else
   fi
 fi
 
-echo "[2/10] Verifying required runtime dependencies"
+echo "[3/12] Verifying required runtime dependencies"
 for dep in decimal.js date-fns bcryptjs; do
   if ! npm ls "$dep" >/dev/null 2>&1; then
     echo "Error: required dependency '$dep' is missing."
@@ -60,25 +66,25 @@ for dep in decimal.js date-fns bcryptjs; do
   fi
 done
 
-echo "[3/10] Generating Prisma client"
+echo "[4/12] Generating Prisma client"
 if ! npx prisma generate; then
   echo "Error: Prisma client generation failed."
   exit 1
 fi
 
-echo "[4/11] Applying Prisma migrations (deploy)"
+echo "[5/12] Applying Prisma migrations (deploy)"
 if ! npx prisma migrate deploy; then
   echo "Error: Prisma migrate deploy failed. Aborting package creation."
   exit 1
 fi
 
-echo "[5/11] Running production build"
+echo "[6/12] Running production build"
 if ! npm run build; then
   echo "Error: Build failed. Aborting package creation."
   exit 1
 fi
 
-echo "[6/11] Reconstructing standalone package directory"
+echo "[7/12] Reconstructing standalone package directory"
 if [[ ! -d "$PROJECT_ROOT/.next/standalone" ]]; then
   echo "Error: .next/standalone was not generated."
   echo "Verify Next.js standalone output and try again."
@@ -114,28 +120,28 @@ else
   mkdir -p "$DIST_DIR/public"
 fi
 
-echo "[7/11] Copying Prisma schema/runtime files"
+echo "[8/12] Copying Prisma schema/runtime files"
 if [[ ! -d "$PROJECT_ROOT/prisma" ]]; then
   echo "Error: prisma directory is missing."
   exit 1
 fi
 cp -a "$PROJECT_ROOT/prisma" "$DIST_DIR/prisma"
 
-echo "[8/11] Verifying entry point"
+echo "[9/12] Verifying entry point"
 if [[ ! -f "$DIST_DIR/server.js" ]]; then
   echo "Error: server.js is missing in yegara_dist root."
   echo "The cPanel Node.js app needs this startup file."
   exit 1
 fi
 
-echo "[9/11] Creating deployment zip"
+echo "[10/12] Creating deployment zip"
 rm -f "$ZIP_PATH"
 (
   cd "$DIST_DIR"
   zip -r ../yegara-deploy.zip . -i "*" >/dev/null
 )
 
-echo "[10/11] Verifying deployment zip contents"
+echo "[11/12] Verifying deployment zip contents"
 ZIP_LISTING="$(unzip -l "$ZIP_PATH")"
 
 echo "$ZIP_LISTING" | grep -Eq '(^|[[:space:]])server\.js$' || {
@@ -150,7 +156,7 @@ echo "$ZIP_LISTING" | grep -Eq '[[:space:]]\.next/$|[[:space:]]\.next/' || {
 
 echo "Verified: yegara-deploy.zip contains server.js and .next/"
 
-echo "[11/11] Cleaning temporary directory"
+echo "[12/12] Cleaning temporary directory"
 rm -rf "$DIST_DIR"
 
 echo ""
