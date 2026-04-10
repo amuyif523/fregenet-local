@@ -62,4 +62,6 @@ MYSQL_PWD="$DB_PASS" mysqldump \
   --triggers \
   "$DB_NAME" > "$OUTPUT_FILE"
 
+find "$BACKUP_DIR" -type f -name '*.sql' -mtime +30 -delete
+
 echo "Database backup created: $OUTPUT_FILE"

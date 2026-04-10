@@ -140,6 +140,16 @@ bash scripts/backup-db.sh
 
 Backups are written to the `backups/` directory.
 
+### Automated daily DB backup (2:00 AM)
+
+Crontab example:
+
+```bash
+0 2 * * * cd /path/to/fregenet-local && /bin/bash scripts/backup-db.sh >> /var/log/fregenet-backup.log 2>&1
+```
+
+The backup script automatically removes `.sql` backups older than 30 days.
+
 ### View logs
 
 ```bash
