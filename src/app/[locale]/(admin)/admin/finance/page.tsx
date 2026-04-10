@@ -1,20 +1,22 @@
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import FinanceClientPage from "./FinanceClientPage";
+import { getAdminSessionUser } from "@/lib/admin-auth";
 
 export default async function FinancePage({
   params
 }: {
   params: Promise<{ locale: string }>;
 }) {
-  const { locale } = await params;
+  await params;
+  const sessionUser = await getAdminSessionUser();
   const cookieStore = await cookies();
   const rawCenterId = cookieStore.get("fregenet_center_id")?.value || "GLOBAL";
   const isGlobal = rawCenterId === "GLOBAL";
 
   const centerScope = isGlobal ? {} : { centerId: rawCenterId };
 
-  const [donationAgg, expenseAgg, payrollAgg, existingExpenses] = await Promise.all([
+  const [donationAgg, expenseAgg, payrollAgg, existingExpenses, sealedMonths] = await Promise.all([
     prisma.donation.aggregate({
       _sum: { amount: true },
       where: { paymentStatus: "COMPLETED", ...centerScope }
@@ -30,6 +32,16 @@ export default async function FinancePage({
     prisma.schoolExpense.findMany({
       where: centerScope,
       orderBy: { createdAt: "desc" }
+    }),
+    prisma.sealedFinanceMonth.findMany({
+      where: isGlobal ? {} : { centerId: rawCenterId },
+      select: {
+        centerId: true,
+        month: true,
+        year: true,
+        sealedAt: true
+      },
+      orderBy: { sealedAt: "desc" }
     })
   ]);
 
@@ -102,6 +114,7 @@ export default async function FinancePage({
     <FinanceClientPage
       isGlobal={isGlobal}
       centerId={rawCenterId}
+      userRole={sessionUser?.role || "STAFF"}
       summary={{
         totalIncome,
         totalOpsExpense,
@@ -110,7 +123,14 @@ export default async function FinancePage({
       }}
       trendData={trendData}
       pieData={pieData}
-      expenses={existingExpenses}
+      expenses={existingExpenses.map((expense) => ({
+        id: expense.id,
+        amount: Number(expense.amount),
+        category: expense.category,
+        description: expense.description,
+        createdAt: expense.createdAt
+      }))}
+      sealedMonths={sealedMonths}
     />
   );
 }

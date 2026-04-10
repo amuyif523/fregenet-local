@@ -56,6 +56,7 @@
     "projects": "Projects",
     "newsletters": "Newsletters",
     "messages": "Messages",
+    "activity": "Activity Feed",
     "governance": "Governance",
     "messagesSubtitle": "Inbox of form submissions from the public contact page.",
     "noMessages": "No messages yet.",
@@ -76,6 +77,27 @@
     "newsletterDraft": "Newsletter saved as draft",
     "backToSite": "Back to Site",
     "logout": "Logout"
+  },
+  "ERP": {
+    "roles": {
+      "SUPERADMIN": "Superadmin",
+      "DIRECTOR": "Director",
+      "FINANCE": "Finance",
+      "STAFF": "Staff"
+    },
+    "attendance": {
+      "PRESENT": "Present",
+      "ABSENT": "Absent",
+      "TARDY": "Tardy",
+      "EXCUSED": "Excused"
+    },
+    "expenseCategories": {
+      "FOOD_PROGRAM": "Food Program",
+      "UTILITIES": "Utilities",
+      "MAINTENANCE": "Maintenance",
+      "CONSTRUCTION": "Construction",
+      "SUPPLIES": "Supplies"
+    }
   },
   "Contact": {
     "pageTitle": "Contact FKL Local",
@@ -99,6 +121,7 @@
     "projectsLink": "Projects",
     "newsLink": "News",
     "governanceLink": "Governance",
+    "transparencyLink": "Transparency",
     "contactLink": "Contact",
     "copyright": "© {year} Fregenet Kidan Lehitsanat. All Rights Reserved."
   },

@@ -55,6 +55,9 @@ export default function Footer() {
             <Link href={withLocale("/governance", locale)} className="block transition hover:text-cyan-200">
               {t("Footer.governanceLink")}
             </Link>
+            <Link href={withLocale("/transparency", locale)} className="block transition hover:text-cyan-200">
+              {t("Footer.transparencyLink")}
+            </Link>
             <Link href={withLocale("/contact", locale)} className="block transition hover:text-cyan-200">
               {t("Footer.contactLink")}
             </Link>

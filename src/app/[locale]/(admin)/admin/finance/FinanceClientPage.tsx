@@ -3,7 +3,8 @@
 import { useState, useTransition } from "react";
 import { Plus, TrendingUp, TrendingDown, Trash2, Edit2 } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
-import { upsertSchoolExpense, deleteSchoolExpense } from "@/lib/finance-actions";
+import { upsertSchoolExpense, deleteSchoolExpense, unsealFinanceMonth } from "@/lib/finance-actions";
+import { normalizeRole } from "@/lib/rbac";
 
 type SummaryProps = {
   totalIncome: number;
@@ -25,38 +26,80 @@ type PieData = {
 
 type Expense = {
   id: string;
-  amount: any;
+  amount: number | string;
   category: "FOOD_PROGRAM" | "UTILITIES" | "MAINTENANCE" | "CONSTRUCTION" | "SUPPLIES";
   description: string | null;
   createdAt: Date;
 };
 
+type SealedMonth = {
+  centerId: string;
+  month: number;
+  year: number;
+  sealedAt: Date;
+};
+
 const PIE_COLORS = ["#006D77", "#83C5BE", "#E29578", "#FFDDD2", "#00545c"];
+
+function formatTooltipValue(value: number | string | ReadonlyArray<string | number> | undefined) {
+  const normalized = Array.isArray(value) ? value[0] : value;
+  return formatCurrency(Number(normalized ?? 0));
+}
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "ETB" }).format(value);
 }
 
+function getErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+  return fallback;
+}
+
 export default function FinanceClientPage({
   isGlobal,
   centerId,
+  userRole,
   summary,
   trendData,
   pieData,
-  expenses
+  expenses,
+  sealedMonths
 }: {
   isGlobal: boolean;
   centerId: string;
+  userRole: string;
   summary: SummaryProps;
   trendData: TrendData[];
   pieData: PieData[];
   expenses: Expense[];
+  sealedMonths: SealedMonth[];
 }) {
   const [isPending, startTransition] = useTransition();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
+  const [unsealing, setUnsealing] = useState<SealedMonth | null>(null);
+  const canUnseal = normalizeRole(userRole) === "SUPERADMIN";
+
+  const sealedMonthKeys = new Set(sealedMonths.map((entry) => `${entry.centerId}-${entry.year}-${entry.month}`));
+  const now = new Date();
+  const currentSealKey = `${centerId}-${now.getUTCFullYear()}-${now.getUTCMonth() + 1}`;
+  const isCurrentMonthSealed = sealedMonthKeys.has(currentSealKey);
+
+  const isExpenseSealed = (expense: Expense) => {
+    const expenseDate = new Date(expense.createdAt);
+    const key = `${centerId}-${expenseDate.getUTCFullYear()}-${expenseDate.getUTCMonth() + 1}`;
+    return sealedMonthKeys.has(key);
+  };
 
   const handleDelete = async (id: string) => {
+    const target = expenses.find((expense) => expense.id === id);
+    if (target && isExpenseSealed(target)) {
+      alert("This expense is in a sealed month and cannot be deleted.");
+      return;
+    }
+
     if (!window.confirm("Are you sure you want to delete this expense?")) return;
     startTransition(async () => {
       await deleteSchoolExpense(id);
@@ -69,6 +112,10 @@ export default function FinanceClientPage({
     formData.append("centerId", centerId);
 
     if (editingExpense) {
+      if (isExpenseSealed(editingExpense)) {
+        alert("This expense is in a sealed month and cannot be edited.");
+        return;
+      }
       formData.append("expenseId", editingExpense.id);
     }
 
@@ -77,8 +124,8 @@ export default function FinanceClientPage({
         await upsertSchoolExpense(formData);
         setIsFormOpen(false);
         setEditingExpense(null);
-      } catch (err: any) {
-        alert(err.message);
+      } catch (error: unknown) {
+        alert(getErrorMessage(error, "Unable to save expense."));
       }
     });
   };
@@ -138,7 +185,7 @@ export default function FinanceClientPage({
                 <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#64748b' }} stroke="#cbd5e1" />
                 <YAxis tick={{ fontSize: 12, fill: '#64748b' }} stroke="#cbd5e1" tickFormatter={(value) => `${value / 1000}k`} />
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                <RechartsTooltip formatter={(value: any) => formatCurrency(Number(value))} />
+                <RechartsTooltip formatter={formatTooltipValue} />
                 <Legend />
                 <Area type="monotone" name="Income" dataKey="income" stroke="#006D77" strokeWidth={2} fillOpacity={1} fill="url(#colorIncome)" />
                 <Area type="monotone" name="Outflow" dataKey="outflow" stroke="#E29578" strokeWidth={2} fillOpacity={1} fill="url(#colorOutflow)" />
@@ -167,7 +214,7 @@ export default function FinanceClientPage({
                       <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                     ))}
                   </Pie>
-                  <RechartsTooltip formatter={(value: any) => formatCurrency(Number(value))} />
+                  <RechartsTooltip formatter={formatTooltipValue} />
                   <Legend layout="horizontal" verticalAlign="bottom" align="center" wrapperStyle={{ fontSize: '11px', paddingTop: '20px' }} />
                 </PieChart>
               </ResponsiveContainer>
@@ -178,6 +225,30 @@ export default function FinanceClientPage({
         </div>
       </div>
 
+      {canUnseal && sealedMonths.length > 0 && !isGlobal && (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 shadow-sm">
+          <h2 className="text-lg font-bold text-amber-900">Emergency Unseal Override</h2>
+          <p className="mt-1 text-sm text-amber-800">SUPERADMIN only. Every unseal action requires a reason and is audit logged.</p>
+          <div className="mt-4 grid gap-3">
+            {sealedMonths.map((sealed) => (
+              <div key={`${sealed.centerId}-${sealed.year}-${sealed.month}`} className="flex items-center justify-between rounded-lg border border-amber-200 bg-white p-3">
+                <p className="text-sm font-semibold text-slate-800">
+                  {`${sealed.year}-${String(sealed.month).padStart(2, "0")}`} sealed on {new Date(sealed.sealedAt).toLocaleDateString("en-US")}
+                </p>
+                <button
+                  type="button"
+                  disabled={isPending}
+                  onClick={() => setUnsealing(sealed)}
+                  className="rounded-lg border border-amber-400 px-3 py-1.5 text-xs font-bold text-amber-800 hover:bg-amber-100 disabled:opacity-50"
+                >
+                  Unseal Month
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* OPERATIONS EXPENSE LEDGER */}
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex items-center justify-between mb-6">
@@ -187,11 +258,18 @@ export default function FinanceClientPage({
           </div>
           <button
             onClick={() => { setEditingExpense(null); setIsFormOpen(true); }}
-            className={`flex items-center gap-2 rounded-lg bg-[#006D77] px-4 py-2 text-sm font-semibold text-white transition hover:bg-teal-700 ${isGlobal ? 'opacity-0 pointer-events-none' : ''}`}
+            disabled={isCurrentMonthSealed}
+            className={`flex items-center gap-2 rounded-lg bg-[#006D77] px-4 py-2 text-sm font-semibold text-white transition hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-50 ${isGlobal ? 'opacity-0 pointer-events-none' : ''}`}
           >
             <Plus className="size-4" /> Add Row
           </button>
         </div>
+
+        {!isGlobal && isCurrentMonthSealed && (
+          <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800">
+            Current month is sealed after payroll. New expense entries are locked.
+          </p>
+        )}
 
         <div className="overflow-hidden rounded-xl border border-slate-200">
           <table className="w-full text-left text-sm text-slate-600">
@@ -211,23 +289,29 @@ export default function FinanceClientPage({
                 </tr>
               ) : (
                 expenses.map((exp) => (
+                  (() => {
+                    const sealed = isExpenseSealed(exp);
+                    return (
                   <tr key={exp.id} className="transition hover:bg-slate-50/50">
                     <td className="p-4 font-semibold text-slate-800">{(exp.category).replace("_", " ")}</td>
                     <td className="p-4 text-slate-500">{exp.description || "-"}</td>
                     <td className="p-4 font-semibold text-rose-700">{formatCurrency(Number(exp.amount))}</td>
-                    <td className="p-4 font-medium">{new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(exp.createdAt))}</td>
+                    <td className="p-4 font-medium">
+                      {new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(exp.createdAt))}
+                      {sealed && <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">SEALED</span>}
+                    </td>
                     <td className="p-4 text-right">
                       {!isGlobal && (
                         <div className="flex justify-end gap-3">
                           <button
-                            disabled={isPending}
+                            disabled={isPending || sealed}
                             onClick={() => { setEditingExpense(exp); setIsFormOpen(true); }}
                             className="text-[#006D77] hover:text-teal-700 disabled:opacity-50"
                           >
                             <Edit2 className="size-4" />
                           </button>
                           <button
-                            disabled={isPending}
+                            disabled={isPending || sealed}
                             onClick={() => handleDelete(exp.id)}
                             className="text-rose-500 hover:text-rose-700 disabled:opacity-50"
                           >
@@ -237,6 +321,8 @@ export default function FinanceClientPage({
                       )}
                     </td>
                   </tr>
+                    );
+                  })()
                 ))
               )}
             </tbody>
@@ -273,6 +359,62 @@ export default function FinanceClientPage({
                 <button type="button" disabled={isPending} onClick={() => setIsFormOpen(false)} className="rounded-lg px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100">Cancel</button>
                 <button type="submit" disabled={isPending} className="rounded-lg bg-[#006D77] px-4 py-2 text-sm font-semibold text-white hover:bg-teal-700 disabled:opacity-50">
                   {isPending ? "Saving..." : "Commit Transfer"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {unsealing && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+            <h2 className="mb-2 text-xl font-bold text-slate-900">Unseal Month</h2>
+            <p className="mb-4 text-sm text-slate-600">Provide a mandatory reason for unlocking this sealed month.</p>
+            <form
+              onSubmit={(event) => {
+                event.preventDefault();
+                const formData = new FormData(event.currentTarget);
+                const reason = String(formData.get("reason") || "").trim();
+
+                startTransition(async () => {
+                  try {
+                    await unsealFinanceMonth({
+                      centerId: unsealing.centerId,
+                      month: unsealing.month,
+                      year: unsealing.year,
+                      reason
+                    });
+                    setUnsealing(null);
+                  } catch (error: unknown) {
+                    alert(getErrorMessage(error, "Unable to unseal month."));
+                  }
+                });
+              }}
+              className="space-y-4"
+            >
+              <textarea
+                name="reason"
+                required
+                minLength={10}
+                rows={4}
+                placeholder="Reason for unsealing (required)"
+                className="w-full rounded-lg border border-slate-300 p-2 text-sm focus:border-[#006D77] focus:outline-none focus:ring-1 focus:ring-[#006D77]"
+              />
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setUnsealing(null)}
+                  className="rounded-lg px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isPending}
+                  className="rounded-lg bg-amber-700 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-800 disabled:opacity-50"
+                >
+                  {isPending ? "Unsealing..." : "Confirm Unseal"}
                 </button>
               </div>
             </form>

@@ -56,6 +56,7 @@
     "projects": "ፕሮጀክቶች",
     "newsletters": "ዜና መጽሔቶች",
     "messages": "መልዕክቶች",
+    "activity": "የተግባር ታሪክ",
     "governance": "አስተዳደር",
     "messagesSubtitle": "ከህዝብ ግንኙነት ገጽ የተላኩ መልዕክቶች ማህደር።",
     "noMessages": "እስካሁን መልዕክት የለም።",
@@ -76,6 +77,27 @@
     "newsletterDraft": "ዜና መጽሔት እንደ ረቂቅ ተቀምጧል",
     "backToSite": "ወደ ድህረ ገጹ ተመለስ",
     "logout": "ውጣ"
+  },
+  "ERP": {
+    "roles": {
+      "SUPERADMIN": "ከፍተኛ አስተዳዳሪ",
+      "DIRECTOR": "ዳይሬክተር",
+      "FINANCE": "ፋይናንስ",
+      "STAFF": "ሰራተኛ"
+    },
+    "attendance": {
+      "PRESENT": "ተገኝቷል",
+      "ABSENT": "አልተገኘም",
+      "TARDY": "ዘግይቷል",
+      "EXCUSED": "ፈቃድ አለው"
+    },
+    "expenseCategories": {
+      "FOOD_PROGRAM": "የምግብ ፕሮግራም",
+      "UTILITIES": "ዩቲሊቲ",
+      "MAINTENANCE": "ጥገና",
+      "CONSTRUCTION": "ግንባታ",
+      "SUPPLIES": "አቅርቦቶች"
+    }
   },
   "Contact": {
     "pageTitle": "FKL Local ያግኙ",
@@ -99,6 +121,7 @@
     "projectsLink": "ፕሮጀክቶች",
     "newsLink": "ዜና",
     "governanceLink": "አስተዳደር",
+    "transparencyLink": "ግልፅነት",
     "contactLink": "አግኙን",
     "copyright": "© {year} ፍሬገነት ኪዳን ለህፃናት። መብቱ የተጠበቀ ነው።"
   },

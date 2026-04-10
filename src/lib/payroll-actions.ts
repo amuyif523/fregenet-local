@@ -2,6 +2,8 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { verifySession } from "@/lib/auth-guard";
+import { ROLE_DIRECTOR, ROLE_FINANCE, ROLE_SUPERADMIN, assertRoleAllowed } from "@/lib/rbac";
 
 // Workaround for `Decimal` type which is sometimes difficult to unwrap natively from standard imports in Next.js builds
 import Decimal from "decimal.js";
@@ -11,7 +13,7 @@ import Decimal from "decimal.js";
  * Formula: (Taxable Income * Bracket Rate) - Standard Deduction
  */
 function calculateEthiopianTax(taxableIncomeVal: string | number | typeof Decimal.prototype): typeof Decimal.prototype {
-  const t = new Decimal(taxableIncomeVal as any);
+  const t = new Decimal(taxableIncomeVal.toString());
 
   if (t.lte(600)) {
     return new Decimal(0);
@@ -31,6 +33,9 @@ function calculateEthiopianTax(taxableIncomeVal: string | number | typeof Decima
 }
 
 export async function processCenterPayroll(centerId: string, month: number, year: number) {
+  const user = await verifySession();
+  assertRoleAllowed(user.role, [ROLE_SUPERADMIN, ROLE_DIRECTOR, ROLE_FINANCE]);
+
   if (centerId === "GLOBAL") {
     throw new Error("Cannot process payroll globally. Select a specific center.");
   }
@@ -60,6 +65,36 @@ export async function processCenterPayroll(centerId: string, month: number, year
   const staffToProcess = staffMembers.filter(s => !existingStaffIds.has(s.id));
 
   if (staffToProcess.length === 0) {
+    if (existingRuns.length > 0) {
+      await prisma.sealedFinanceMonth.upsert({
+        where: {
+          centerId_month_year: {
+            centerId,
+            month,
+            year
+          }
+        },
+        create: {
+          centerId,
+          month,
+          year,
+          sealedBy: user.id
+        },
+        update: {
+          sealedBy: user.id
+        }
+      });
+
+      await prisma.auditLog.create({
+        data: {
+          actorId: user.id,
+          actionType: "SEAL_FINANCE_MONTH",
+          notes: "Payroll already finalized. Month remains sealed.",
+          metadata: { centerId, month, year }
+        }
+      });
+    }
+
     return { success: false, message: "Payroll already processed for all active staff this month." };
   }
 
@@ -98,8 +133,40 @@ export async function processCenterPayroll(centerId: string, month: number, year
     payrollRecordsData.map(data => prisma.payrollRecord.create({ data }))
   );
 
+  await prisma.sealedFinanceMonth.upsert({
+    where: {
+      centerId_month_year: {
+        centerId,
+        month,
+        year
+      }
+    },
+    create: {
+      centerId,
+      month,
+      year,
+      sealedBy: user.id
+    },
+    update: {
+      sealedBy: user.id
+    }
+  });
+
+  await prisma.auditLog.create({
+    data: {
+      actorId: user.id,
+      actionType: "SEAL_FINANCE_MONTH",
+      notes: "Month sealed automatically after payroll processing.",
+      metadata: { centerId, month, year, processedCount: payrollRecordsData.length }
+    }
+  });
+
   // 5. Revalidate cache
   revalidatePath("/[locale]/admin/staff", "page");
+  revalidatePath("/[locale]/admin/finance", "page");
+  revalidatePath("/[locale]/admin/activity", "page");
+  revalidatePath("/en/transparency", "page");
+  revalidatePath("/am/transparency", "page");
   
   return { 
     success: true, 
