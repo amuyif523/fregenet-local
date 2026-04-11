@@ -223,13 +223,34 @@ cp -r .next/static .next/standalone/.next/static
 
 At that point, `.next/standalone/` is a self-contained package.
 
-### cPanel entry point
+### cPanel Node.js Selector settings (required)
 
-This repository includes a root `server.js` that forwards to `.next/standalone/server.js` and maps `NODEJS_PORT` to `PORT` for cPanel.
+This repository includes a root `server.js` that forwards to `./.next/standalone/server.js` and maps `NODEJS_PORT` to `PORT` for cPanel.
 
-In cPanel Node.js Selector, set:
+In cPanel Node.js Selector, use these exact settings:
 
-- Application startup file: `server.js`
-- Application root: project root (where `server.js` exists)
+- Application Root: folder where `yegara-deploy.zip` is extracted (must contain `.next/`, `server.js`, `.env`)
+- Startup File: `server.js`
+- Environment: `production`
 
-Then restart the Node.js app from cPanel.
+Required environment variables for the app runtime:
+
+- `DATABASE_URL`
+- `INITIAL_ADMIN_EMAIL`
+- `INITIAL_ADMIN_PASSWORD`
+- `ADMIN_SESSION_SECRET`
+- `DONATION_STATUS_TOKEN_SECRET`
+- `CRON_SECRET`
+- `NEXT_PUBLIC_APP_URL`
+- `DEFAULT_LOCALE`
+- `SUPPORTED_LOCALES`
+- `CHAPA_SECRET_KEY`
+- `CHAPA_WEBHOOK_SECRET`
+- `CHAPA_CALLBACK_URL`
+- `CHAPA_RETURN_URL`
+- `STORAGE_PROVIDER`
+- `STORAGE_DRIVER`
+- `STORAGE_LOCAL_ROOT`
+- `STORAGE_PUBLIC_BASE_URL`
+
+After setting these values, restart the Node.js app from cPanel.

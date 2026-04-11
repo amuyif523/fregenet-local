@@ -223,7 +223,7 @@ export default async function AdminPage({
             href="/docs/directors_guide.pdf"
             className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-700 hover:bg-slate-100"
           >
-            Open Director's Guide
+            Open Director&apos;s Guide
           </a>
           <Link
             href={`/${locale}/admin/health`}
