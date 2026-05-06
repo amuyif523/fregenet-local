@@ -8,31 +8,30 @@ export async function verifyAdminCredentials(email: string, password: string): P
     return null;
   }
 
-  const account = await prisma.staffAccount.findUnique({
+  const user = await prisma.user.findUnique({
     where: { email: normalizedEmail },
     select: {
       id: true,
       email: true,
       password: true,
-      role: true,
-      staffId: true
+      role: true
     }
   });
 
-  if (!account) {
+  if (!user) {
     return null;
   }
 
-  const isValid = await bcrypt.compare(password, account.password);
+  const isValid = await bcrypt.compare(password, user.password);
   if (!isValid) {
     return null;
   }
 
   return {
-    id: account.id,
-    role: account.role,
-    email: account.email,
-    staffId: account.staffId
+    id: user.id,
+    role: user.role,
+    email: user.email,
+    userId: user.id
   };
 }
 

@@ -6,7 +6,7 @@ export type AdminUserSession = {
   id: string;
   role: "SUPERADMIN" | "DIRECTOR" | "FINANCE" | "ADMIN" | "STAFF";
   email: string;
-  staffId: string;
+  userId: string;
 };
 
 export type AdminSessionData = {

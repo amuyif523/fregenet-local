@@ -102,15 +102,12 @@ model Donation {
   chapaCheckoutId String?
   paidAt          DateTime?
   metadata        Json?
-  centerId        String?
-  schoolCenter    SchoolCenter? @relation(fields: [centerId], references: [id], onDelete: SetNull)
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
   @@index([tx_ref])
   @@index([paymentStatus])
   @@index([createdAt])
-  @@index([centerId])
 }
 
 model ContactMessage {
@@ -126,65 +123,7 @@ model ContactMessage {
   @@index([createdAt])
 }
 
-enum StaffRole {
-  TEACHER
-  ADMIN
-  SUPPORT
-}
-
-enum ItemCategory {
-  STATIONERY
-  UNIFORM
-  TEXTBOOK
-  ASSET
-}
-
-enum GuardianRelationship {
-  MOTHER
-  FATHER
-  LEGAL_GUARDIAN
-}
-
-enum StudentGender {
-  MALE
-  FEMALE
-  OTHER
-}
-
-enum StudentStatus {
-  ACTIVE
-  INACTIVE
-  ALUMNI
-  DROPPED
-}
-
-enum InteractionType {
-  PARENT_MEETING
-  DISCIPLINARY_NOTE
-  ATTENDANCE_FOLLOWUP
-  UNIFORM_SUPPORT
-  GENERAL_NOTE
-}
-
-enum AttendanceStatus {
-  PRESENT
-  ABSENT
-  TARDY
-  EXCUSED
-}
-
-enum InventoryLogType {
-  RESTOCK
-  ISSUE
-}
-
-enum ExpenseCategory {
-  FOOD_PROGRAM
-  UTILITIES
-  MAINTENANCE
-  CONSTRUCTION
-  SUPPLIES
-}
+// Foundation models below. ERP models removed during decommissioning.
 
 enum UserRole {
   SUPERADMIN
@@ -194,213 +133,13 @@ enum UserRole {
   STAFF
 }
 
-model SchoolCenter {
-  id        String   @id @default(cuid())
-  name      String
-  location  String
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  staff     Staff[]
-  inventory InventoryItem[]
-  inventoryLogs InventoryLog[]
-  expenses  SchoolExpense[]
-  donations Donation[]
-  students  Student[]
-  studentInteractions StudentInteraction[]
-  attendanceRecords Attendance[]
-  sealedFinanceMonths SealedFinanceMonth[]
-}
-
-model Staff {
-  id            String    @id @default(cuid())
-  name          String
-  role          StaffRole
-  baseSalary    Decimal   @db.Decimal(12, 2)
-  pensionNumber String?
-  photoUrl      String?
-  isActive      Boolean   @default(true)
-  centerId      String
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  center         SchoolCenter    @relation(fields: [centerId], references: [id], onDelete: Restrict)
-  payrollRecords PayrollRecord[]
-  account        StaffAccount?
-
-  @@index([centerId])
-}
-
-model PayrollRecord {
-  id                  String   @id @default(cuid())
-  staffId             String
-  month               Int
-  year                Int
-  grossSalary         Decimal  @db.Decimal(12, 2)
-  netSalary           Decimal  @db.Decimal(12, 2)
-  incomeTax                   Decimal  @db.Decimal(12, 2)
-  pensionContribution         Decimal  @db.Decimal(12, 2)
-  employerPensionContribution Decimal  @db.Decimal(12, 2) @default(0.00)
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
-
-  staff Staff @relation(fields: [staffId], references: [id], onDelete: Restrict)
-
-  @@index([staffId])
-}
-
-model InventoryItem {
-  id        String       @id @default(cuid())
-  name      String
-  category  ItemCategory
-  quantity  Int          @default(0)
-  minStock  Int          @default(0)
-  centerId  String
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
-
-  center SchoolCenter @relation(fields: [centerId], references: [id], onDelete: Restrict)
-  logs   InventoryLog[]
-
-  @@index([centerId])
-}
-
-model InventoryLog {
-  id            String           @id @default(cuid())
-  itemId        String
-  centerId      String
-  performedBy   String
-  logType       InventoryLogType
-  quantityDelta Int
-  quantityAfter Int
-  recipientName String?
-  notes         String?
-  createdAt     DateTime         @default(now())
-
-  item   InventoryItem @relation(fields: [itemId], references: [id], onDelete: Restrict)
-  center SchoolCenter  @relation(fields: [centerId], references: [id], onDelete: Restrict)
-
-  @@index([itemId, createdAt])
-  @@index([centerId, createdAt])
-  @@index([performedBy, createdAt])
-}
-
-model SchoolExpense {
-  id          String          @id @default(cuid())
-  amount      Decimal         @db.Decimal(12, 2)
-  category    ExpenseCategory
-  description String?
-  centerId    String?
-  performedBy String?
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
-
-  center SchoolCenter? @relation(fields: [centerId], references: [id], onDelete: SetNull)
-
-  @@index([centerId])
-}
-
-model Student {
-  id             String       @id @default(cuid())
-  name           String
-  gradeLevel     String
-  gender         StudentGender
-  dateOfBirth    DateTime
-  enrollmentDate DateTime
-  status         StudentStatus @default(ACTIVE)
-  guardianId     String
-  centerId       String
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-
-  guardian     Guardian             @relation(fields: [guardianId], references: [id], onDelete: Restrict)
-  center       SchoolCenter         @relation(fields: [centerId], references: [id], onDelete: Restrict)
-  interactions StudentInteraction[]
-  attendanceRecords Attendance[]
-
-  @@index([centerId])
-  @@index([guardianId])
-  @@index([status])
-}
-
-model Attendance {
-  id          String           @id @default(cuid())
-  studentId   String
-  centerId    String
-  date        DateTime
-  status      AttendanceStatus @default(PRESENT)
-  notes       String?
-  performedBy String
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-
-  student Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  center  SchoolCenter @relation(fields: [centerId], references: [id], onDelete: Restrict)
-
-  @@unique([studentId, date])
-  @@index([centerId, date])
-  @@index([status, date])
-}
-
-model Guardian {
-  id          String               @id @default(cuid())
-  name        String
-  phoneNumber String
-  email       String?
-  address     String?
-  relationship GuardianRelationship
-  createdAt   DateTime             @default(now())
-  updatedAt   DateTime             @updatedAt
-
-  students Student[]
-}
-
-model StudentInteraction {
-  id              String          @id @default(cuid())
-  studentId       String
-  centerId        String
-  interactionType InteractionType
-  title           String
-  notes           String
-  interactionDate DateTime        @default(now())
-  performedBy     String
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-
-  student Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  center  SchoolCenter @relation(fields: [centerId], references: [id], onDelete: Restrict)
-
-  @@index([studentId, interactionDate])
-  @@index([centerId, interactionDate])
-  @@index([performedBy, interactionDate])
-}
-
-model StaffAccount {
+model User {
   id        String   @id @default(cuid())
   email     String   @unique
   password  String
   role      UserRole @default(STAFF)
-  staffId   String   @unique
-  staff     Staff    @relation(fields: [staffId], references: [id], onDelete: Restrict)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-}
-
-model SealedFinanceMonth {
-  id        String   @id @default(cuid())
-  centerId  String
-  month     Int
-  year      Int
-  sealedBy  String
-  sealedAt  DateTime @default(now())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  center SchoolCenter @relation(fields: [centerId], references: [id], onDelete: Cascade)
-
-  @@unique([centerId, month, year])
-  @@index([centerId, sealedAt])
 }
 
 model AuditLog {

@@ -28,24 +28,24 @@ export async function changeMyPassword(formData: FormData) {
     throw new Error("New password and confirmation do not match.");
   }
 
-  const account = await prisma.staffAccount.findUnique({
-    where: { id: user.id },
+  const userRecord = await prisma.user.findUnique({
+    where: { id: user.userId },
     select: { id: true, password: true }
   });
 
-  if (!account) {
+  if (!userRecord) {
     throw new Error("Unable to load your account.");
   }
 
-  const currentValid = await bcrypt.compare(currentPassword, account.password);
+  const currentValid = await bcrypt.compare(currentPassword, userRecord.password);
   if (!currentValid) {
     throw new Error("Current password is incorrect.");
   }
 
   const nextHash = await bcrypt.hash(newPassword, 12);
 
-  await prisma.staffAccount.update({
-    where: { id: account.id },
+  await prisma.user.update({
+    where: { id: userRecord.id },
     data: { password: nextHash }
   });
 

@@ -7,14 +7,10 @@ import AdminSidebar from "@/components/admin/AdminSidebar";
 
 export default function AdminShell({ 
   locale, 
-  activeCenter,
-  centers,
   userRole,
   children 
 }: { 
   locale: string; 
-  activeCenter: string;
-  centers: Array<{id: string; name: string}>;
   userRole: string;
   children: ReactNode;
 }) {
@@ -40,7 +36,7 @@ export default function AdminShell({
       </div>
 
       <div className="hidden lg:block">
-        <AdminSidebar locale={locale} activeCenter={activeCenter} centers={centers} userRole={userRole} />
+        <AdminSidebar locale={locale} userRole={userRole} />
       </div>
 
       {isOpen ? (
@@ -54,7 +50,7 @@ export default function AdminShell({
             >
               <X className="size-4" />
             </button>
-            <AdminSidebar locale={locale} activeCenter={activeCenter} centers={centers} userRole={userRole} onNavigate={() => setIsOpen(false)} mobile />
+            <AdminSidebar locale={locale} userRole={userRole} onNavigate={() => setIsOpen(false)} mobile />
           </div>
         </div>
       ) : null}

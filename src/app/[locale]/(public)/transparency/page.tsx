@@ -5,71 +5,35 @@ import TransparencyClientPage from "./TransparencyClientPage";
 
 export const revalidate = 3600;
 
-type BucketKey = "TEACHERS" | "FOOD" | "CONSTRUCTION" | "SUPPLIES" | "OPERATIONS";
+type BucketKey = "DONATIONS" | "PENDING" | "ALLOCATION_PLANNED" | "NOT_ALLOCATED" | "OPERATIONS";
 
 const BUCKET_LABELS: Record<BucketKey, string> = {
-  TEACHERS: "Teachers",
-  FOOD: "Food Program",
-  CONSTRUCTION: "Construction",
-  SUPPLIES: "Supplies",
+  DONATIONS: "Donations Received",
+  PENDING: "Pending Processing",
+  ALLOCATION_PLANNED: "Planned Allocation",
+  NOT_ALLOCATED: "Not Yet Allocated",
   OPERATIONS: "Operations"
 };
 
 const getTransparencyImpactData = unstable_cache(
   async () => {
-    const [incomeAggregate, payrollAggregate, expenseGroups] = await Promise.all([
-      prisma.donation.aggregate({
-        _sum: { amount: true },
-        where: { paymentStatus: "COMPLETED" }
-      }),
-      prisma.payrollRecord.aggregate({
-        _sum: {
-          grossSalary: true,
-          employerPensionContribution: true
-        }
-      }),
-      prisma.schoolExpense.groupBy({
-        by: ["category"],
-        _sum: { amount: true }
-      })
-    ]);
+    const incomeAggregate = await prisma.donation.aggregate({
+      _sum: { amount: true },
+      where: { paymentStatus: "COMPLETED" }
+    });
 
     const totalIncome = Number(incomeAggregate._sum?.amount ?? 0);
-    const teacherSpending =
-      Number(payrollAggregate._sum?.grossSalary ?? 0) + Number(payrollAggregate._sum?.employerPensionContribution ?? 0);
 
+    // Foundation: only show donation totals, no spending breakdown since ERP is decommissioned
     const buckets: Record<BucketKey, number> = {
-      TEACHERS: teacherSpending,
-      FOOD: 0,
-      CONSTRUCTION: 0,
-      SUPPLIES: 0,
+      DONATIONS: totalIncome,
+      PENDING: 0,
+      ALLOCATION_PLANNED: 0,
+      NOT_ALLOCATED: 0,
       OPERATIONS: 0
     };
 
-    for (const group of expenseGroups) {
-      const amount = Number(group._sum?.amount ?? 0);
-
-      if (group.category === "FOOD_PROGRAM") {
-        buckets.FOOD += amount;
-        continue;
-      }
-
-      if (group.category === "CONSTRUCTION") {
-        buckets.CONSTRUCTION += amount;
-        continue;
-      }
-
-      if (group.category === "SUPPLIES") {
-        buckets.SUPPLIES += amount;
-        continue;
-      }
-
-      if (group.category === "UTILITIES" || group.category === "MAINTENANCE") {
-        buckets.OPERATIONS += amount;
-      }
-    }
-
-    const totalImpactSpending = Object.values(buckets).reduce((sum, value) => sum + value, 0);
+    const totalImpactSpending = totalIncome;
 
     const chartData = (Object.keys(buckets) as BucketKey[])
       .map((bucketKey) => {
@@ -102,13 +66,5 @@ const getTransparencyImpactData = unstable_cache(
 
 export default async function TransparencyPage() {
   const data = await getTransparencyImpactData();
-
-  return (
-    <TransparencyClientPage
-      totalIncome={data.totalIncome}
-      totalImpactSpending={data.totalImpactSpending}
-      utilizationRatio={data.utilizationRatio}
-      chartData={data.chartData}
-    />
-  );
+  return <TransparencyClientPage {...data} />;
 }
