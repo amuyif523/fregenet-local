@@ -1,14 +1,15 @@
 # Fregenet Local
 
-Fregenet Local is a Next.js 15 application for public impact pages, donations, and admin operations for FKL.
+Fregenet Local is a lean Next.js 15 foundation site for public impact pages, donations, and lightweight admin operations for FKL.
 
 ## Core Features
 
 - Public pages with locale routing (`/en`, `/am`)
 - Donation checkout and status tracking (Chapa)
-- Admin dashboard for donations, projects, newsletters, governance, and messages
+- Admin dashboard for donations, projects, newsletters, governance, messages, and activity
 - Contact pipeline with database-backed message inbox
 - Reconciliation engine for pending donations
+- Simplified Prisma schema centered on `User`, `Project`, `Newsletter`, `BoardMember`, `GovernanceMember`, `Donation`, `ContactMessage`, and `AuditLog`
 
 ## Local Development
 
@@ -28,7 +29,7 @@ cp .env.example .env
 3. Run migrations and generate client:
 
 ```bash
-npx prisma migrate dev --name init_erp
+npx prisma migrate dev --name init_foundation
 npx prisma generate
 ```
 
@@ -39,6 +40,13 @@ npx prisma migrate dev --name your_change_name
 ```
 
 Do not use `prisma db push` for normal development history, because it skips migration tracking.
+
+If you are upgrading Prisma to the latest 7.x stable release, use:
+
+```bash
+npm install prisma@^7 @prisma/client@^7
+npx prisma generate
+```
 
 4. Run app:
 
@@ -144,3 +152,15 @@ npm run build
 ```
 
 Both should pass before deployment.
+
+## Deployment Packaging
+
+`scripts/build-yegara.sh` builds the standalone Next.js output and packages only the runtime artifacts needed for deployment:
+
+- `.next/standalone`
+- `.next/static`
+- `public/`
+- `prisma/migrations/`
+- `.env`
+
+It does not package the root `docs/` tree or other development scratch files such as `code.html`.

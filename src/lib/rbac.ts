@@ -27,11 +27,6 @@ export function normalizeRole(role: string | null | undefined): CanonicalRole {
   return ROLE_STAFF;
 }
 
-export function canUseGlobalCenterScope(role: string | null | undefined) {
-  const normalized = normalizeRole(role);
-  return normalized === ROLE_SUPERADMIN || normalized === ROLE_DIRECTOR;
-}
-
 function normalizeAdminSection(pathname: string) {
   const parts = pathname.split("/").filter(Boolean);
 
@@ -52,27 +47,17 @@ function pathMatches(pathname: string, prefix: string) {
   return pathname === prefix || pathname.startsWith(`${prefix}/`);
 }
 
+const FOUNDATION_ADMIN_PATHS = ["/", "/profile", "/donations", "/projects", "/newsletters", "/messages", "/governance", "/activity"];
+
 export function canAccessAdminPath(role: string | null | undefined, pathname: string) {
-  const normalizedRole = normalizeRole(role);
+  void role;
   const sectionPath = normalizeAdminSection(pathname);
 
   if (sectionPath === "/login" || sectionPath === "/unauthorized") {
     return true;
   }
 
-  if (normalizedRole === ROLE_SUPERADMIN || normalizedRole === ROLE_DIRECTOR) {
-    return true;
-  }
-
-  if (normalizedRole === ROLE_FINANCE) {
-    return ["/", "/profile", "/donations", "/finance", "/staff", "/activity"].some((prefix) =>
-      pathMatches(sectionPath, prefix)
-    );
-  }
-
-  return ["/", "/profile", "/students", "/attendance", "/inventory"].some((prefix) =>
-    pathMatches(sectionPath, prefix)
-  );
+  return FOUNDATION_ADMIN_PATHS.some((prefix) => pathMatches(sectionPath, prefix));
 }
 
 export function assertRoleAllowed(role: string | null | undefined, allowedRoles: CanonicalRole[]) {
