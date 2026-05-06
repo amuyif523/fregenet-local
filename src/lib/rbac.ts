@@ -1,13 +1,12 @@
 export const ROLE_SUPERADMIN = "SUPERADMIN" as const;
 export const ROLE_DIRECTOR = "DIRECTOR" as const;
 export const ROLE_FINANCE = "FINANCE" as const;
-export const ROLE_STAFF = "STAFF" as const;
 
 export type CanonicalRole =
   | typeof ROLE_SUPERADMIN
   | typeof ROLE_DIRECTOR
   | typeof ROLE_FINANCE
-  | typeof ROLE_STAFF;
+  | "STAFF";
 
 export function normalizeRole(role: string | null | undefined): CanonicalRole {
   const normalized = String(role ?? "").trim().toUpperCase();
@@ -24,7 +23,7 @@ export function normalizeRole(role: string | null | undefined): CanonicalRole {
     return ROLE_FINANCE;
   }
 
-  return ROLE_STAFF;
+  return "STAFF";
 }
 
 function normalizeAdminSection(pathname: string) {
